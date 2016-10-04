@@ -37,3 +37,11 @@ dependencies:
         - awscli
         - git+https://github.com/openai/gym.git
         - pyglet
+        - funcsigs
+        - subprocess32
+        - protobuf
+        - colorama
+        - graphviz
+        - six
+        - git+git://github.com/cloudpipe/cloudpickle.git@0d225a4695f1f65ae1cbb2e0bbc145e10167cce4 
+
