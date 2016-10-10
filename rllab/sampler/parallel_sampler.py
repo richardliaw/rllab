@@ -5,6 +5,7 @@ from rllab.misc import logger
 from rllab.misc import tensor_utils
 import pickle
 import numpy as np
+import ray
 
 
 def _worker_init(G, id):
@@ -78,11 +79,9 @@ def set_seed(seed):
         [(seed + i,) for i in xrange(singleton_pool.n_parallel)]
     )
 
-
 def _worker_set_policy_params(G, params, scope=None):
     G = _get_scoped_G(G, scope)
     G.policy.set_param_values(params)
-
 
 def _worker_collect_one_path(G, max_path_length, scope=None):
     G = _get_scoped_G(G, scope)
@@ -114,6 +113,30 @@ def sample_paths(
         show_prog_bar=True
     )
 
+@ray.remote
+def ray_rollout(policy_params, max_path_length):
+    env = ray.reusables.env
+    policy = ray.reusables.policy
+    policy.set_param_values(policy_params)
+    return rollout(env, policy, max_path_length)
+
+def ray_sample_paths(
+        policy_params,
+        max_samples,
+        max_path_length=np.inf,
+        scope=None):
+    # currently ignoring scope
+    param_id = ray.put(policy_params)    
+    remaining = [ray_rollout.remote(param_id, max_path_length) for x in range(4)]
+    num_samples = 0
+    results = []
+    while num_samples < max_samples:
+        done, remaining = ray.wait(remaining)
+        result = ray.get(done[0])
+        num_samples += len(result['observations'])
+        remaining.append(ray_rollout.remote(param_id, max_path_length))
+        results.append(result)
+    return results
 
 def truncate_paths(paths, max_samples):
     """
