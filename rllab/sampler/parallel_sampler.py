@@ -126,16 +126,28 @@ def ray_sample_paths(
         max_path_length=np.inf,
         scope=None):
     # currently ignoring scope
+    # import cProfile, pstats, StringIO
+    # pr = cProfile.Profile()
+    # pr.enable()
+
     param_id = ray.put(policy_params)    
     remaining = [ray_rollout.remote(param_id, max_path_length) for x in range(4)]
     num_samples = 0
     results = []
     while num_samples < max_samples:
-        done, remaining = ray.wait(remaining)
-        result = ray.get(done[0])
-        num_samples += len(result['observations'])
+        done = ray.get(remaining)
+        # result = ray.get(done[0])
+        num_samples += sum(len(result['rewards']) for result in done)
         remaining.append(ray_rollout.remote(param_id, max_path_length))
-        results.append(result)
+        results.extend(done)
+
+    # pr.disable()
+    # s = StringIO.StringIO()
+    # sortby = 'cumulative'
+    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    # ps.print_stats()
+    # print s.getvalue()
+ 
     return results
 
 def truncate_paths(paths, max_samples):

@@ -9,6 +9,7 @@ from rllab.algos import util
 import rllab.misc.logger as logger
 import rllab.plotter as plotter
 import ray
+import pickle
 from rllab.policies.base import Policy
 
 class RaySampler(BatchSampler):
@@ -26,13 +27,21 @@ class RaySampler(BatchSampler):
 
     def obtain_samples(self, itr):
         logger.log("USING RAY")
+        
         cur_params = self.algo.policy.get_param_values()
+        import ipdb; ipdb.set_trace()  # breakpoint 058b77af //
+        
         paths = parallel_sampler.ray_sample_paths(
             policy_params=cur_params,
             max_samples=self.algo.batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
+
+        # with open("tmp/ray.pkl", "w") as f:
+        #     pickle.dump(paths, f)
+
+
         if self.algo.whole_paths:
             return paths
         else:

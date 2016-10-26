@@ -6,13 +6,16 @@ from rllab.misc.instrument import stub, run_experiment_lite
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.algos.ray_sampler import RaySampler
 from examples.point_env import PointEnv
-
+from rllab.misc.ext import set_seed
+import traceback
+import numpy as np
 import ray
 
 # stub(globals())
-ray.init(start_ray_local=True, num_workers=2)
+ray.init(start_ray_local=True, num_workers=1)
 
 def env_init():
+    set_seed(1) 
     return normalize(CartpoleEnv())
 
 def env_reinit(env):
@@ -23,13 +26,18 @@ ray.reusables.env = ray.Reusable(env_init, env_reinit)
 
 def policy_init():
     env = ray.reusables.env
-    return GaussianMLPPolicy(env_spec=env.spec)
+
+    print "using policy env"
+    print traceback.print_stack()     
+    return GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
 def policy_reinit(policy):
     policy.reset()
     return policy
 
 ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
+import ipdb; ipdb.set_trace()  # breakpoint 4a883989 //
+
 env = ray.reusables.env
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -37,7 +45,7 @@ algo = TRPO(
     env=ray.reusables.env,
     policy=ray.reusables.policy,
     baseline=baseline,
-    batch_size=4000,
+    batch_size=400,
     max_path_length=100,
     n_itr=40,
     discount=0.99,

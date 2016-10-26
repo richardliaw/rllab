@@ -3,6 +3,9 @@ from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.box2d.cartpole_env import CartpoleEnv
 from rllab.envs.normalized_env import normalize
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.misc.ext import set_seed
+
+set_seed(1)
 
 env = normalize(CartpoleEnv())
 
@@ -13,12 +16,13 @@ policy = GaussianMLPPolicy(
 )
 
 baseline = LinearFeatureBaseline(env_spec=env.spec)
+import ipdb; ipdb.set_trace()  # breakpoint d6b2c383 //
 
 algo = TRPO(
     env=env,
     policy=policy,
     baseline=baseline,
-    batch_size=4000,
+    batch_size=400,
     max_path_length=100,
     n_itr=40,
     discount=0.99,
