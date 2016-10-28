@@ -131,15 +131,16 @@ def ray_sample_paths(
     # pr.enable()
 
     param_id = ray.put(policy_params)    
-    remaining = [ray_rollout.remote(param_id, max_path_length) for x in range(4)]
     num_samples = 0
     results = []
+    remaining = []
     while num_samples < max_samples:
-        done = ray.get(remaining)
-        # result = ray.get(done[0])
-        num_samples += sum(len(result['rewards']) for result in done)
         remaining.append(ray_rollout.remote(param_id, max_path_length))
-        results.extend(done)
+        done, remaining = ray.wait(remaining)
+        result = ray.get(done[0])
+
+        num_samples += len(result['rewards'])
+        results.append(result)
 
     # pr.disable()
     # s = StringIO.StringIO()

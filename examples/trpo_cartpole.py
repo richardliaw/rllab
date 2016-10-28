@@ -4,9 +4,11 @@ from rllab.envs.box2d.cartpole_env import CartpoleEnv
 from rllab.envs.normalized_env import normalize
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.misc.ext import set_seed
+import numpy as np
 
 set_seed(1)
-
+_state = np.random.get_state()
+print _state[0], _state[1][:3]
 env = normalize(CartpoleEnv())
 
 policy = GaussianMLPPolicy(

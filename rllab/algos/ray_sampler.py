@@ -29,7 +29,6 @@ class RaySampler(BatchSampler):
         logger.log("USING RAY")
         
         cur_params = self.algo.policy.get_param_values()
-        import ipdb; ipdb.set_trace()  # breakpoint 058b77af //
         
         paths = parallel_sampler.ray_sample_paths(
             policy_params=cur_params,
@@ -38,6 +37,7 @@ class RaySampler(BatchSampler):
             scope=self.algo.scope,
         )
 
+        import ipdb; ipdb.set_trace()  # breakpoint b1c0ea12 //
         # with open("tmp/ray.pkl", "w") as f:
         #     pickle.dump(paths, f)
 

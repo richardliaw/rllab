@@ -25,12 +25,16 @@ class BatchSampler(Sampler):
 
     def obtain_samples(self, itr):
         cur_params = self.algo.policy.get_param_values()
+
         paths = parallel_sampler.sample_paths(
             policy_params=cur_params,
             max_samples=self.algo.batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
+
+        import ipdb; ipdb.set_trace()  # breakpoint 1f315582 //
+
         if self.algo.whole_paths:
             return paths
         else:

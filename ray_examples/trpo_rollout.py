@@ -12,27 +12,36 @@ import numpy as np
 import ray
 
 # stub(globals())
+set_seed(1) 
+_state = np.random.get_state()
+print _state[0], _state[1][:3]
+import ipdb; ipdb.set_trace()  # breakpoint c4e55213 //
+
 ray.init(start_ray_local=True, num_workers=1)
 
 def env_init():
     set_seed(1) 
+    _state = np.random.get_state()
+    print _state[0], _state[1][:3]
     return normalize(CartpoleEnv())
 
 def env_reinit(env):
-    env.reset()
+    # env.reset()
     return env
 
 ray.reusables.env = ray.Reusable(env_init, env_reinit)
 
 def policy_init():
     env = ray.reusables.env
+    _state = np.random.get_state()
+    print "POLICY INIT", _state[0], _state[1][:3]
 
     print "using policy env"
-    print traceback.print_stack()     
+    # print traceback.print_stack()     
     return GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
 def policy_reinit(policy):
-    policy.reset()
+    # policy.reset()
     return policy
 
 ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
