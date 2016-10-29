@@ -9,7 +9,8 @@ import ray
 
 
 def _worker_init(G, id):
-    if singleton_pool.n_parallel > 1:
+    # if singleton_pool.n_parallel > 1:
+    if singleton_pool.n_parallel > 0:
         import os
         os.environ['THEANO_FLAGS'] = 'device=cpu'
     G.worker_id = id
@@ -49,7 +50,8 @@ def _worker_terminate_task(G, scope=None):
 
 def populate_task(env, policy, scope=None):
     logger.log("Populating workers...")
-    if singleton_pool.n_parallel > 1:
+    # if singleton_pool.n_parallel > 1:
+    if singleton_pool.n_parallel > 0:
         singleton_pool.run_each(
             _worker_populate_task,
             [(pickle.dumps(env), pickle.dumps(policy), scope)] * singleton_pool.n_parallel
@@ -102,6 +104,8 @@ def sample_paths(
     :param max_path_length: horizon / maximum length of a single trajectory
     :return: a list of collected paths
     """
+    import ipdb; ipdb.set_trace()  # breakpoint 53b593b7 //
+
     singleton_pool.run_each(
         _worker_set_policy_params,
         [(policy_params, scope)] * singleton_pool.n_parallel

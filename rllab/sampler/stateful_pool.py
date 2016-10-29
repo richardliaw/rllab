@@ -53,7 +53,8 @@ class StatefulPool(object):
             self.queue.close()
             self.worker_queue.close()
             self.G = SharedGlobal()
-        if n_parallel > 1:
+        # if n_parallel > 1:
+        if n_parallel > 0:
             self.queue = mp.Queue()
             self.worker_queue = mp.Queue()
             self.pool = MemmapingPool(
@@ -71,7 +72,8 @@ class StatefulPool(object):
         if args_list is None:
             args_list = [tuple()] * self.n_parallel
         assert len(args_list) == self.n_parallel
-        if self.n_parallel > 1:
+        # if self.n_parallel > 1:
+        if self.n_parallel > 0:
             results = self.pool.map_async(
                 _worker_run_each, [(runner, args) for args in args_list]
             )
@@ -83,7 +85,8 @@ class StatefulPool(object):
         return [runner(self.G, *args_list[0])]
 
     def run_map(self, runner, args_list):
-        if self.n_parallel > 1:
+        # if self.n_parallel > 1:
+        if self.n_parallel > 0:
             return self.pool.map((_worker_run_map, runner, args) for args in args_list)
         else:
             ret = []
