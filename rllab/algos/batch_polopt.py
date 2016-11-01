@@ -33,8 +33,6 @@ class BatchSampler(Sampler):
             scope=self.algo.scope,
         )
 
-        import ipdb; ipdb.set_trace()  # breakpoint 1f315582 //
-
         if self.algo.whole_paths:
             return paths
         else:
@@ -238,6 +236,8 @@ class BatchPolopt(RLAlgorithm):
             sampler_args = dict()
         self.sampler = sampler_cls(self, **sampler_args)
 
+        self._paths = [] # for debugging 
+
     def start_worker(self):
         self.sampler.start_worker()
         if self.plot:
@@ -252,6 +252,9 @@ class BatchPolopt(RLAlgorithm):
         for itr in xrange(self.current_itr, self.n_itr):
             with logger.prefix('itr #%d | ' % itr):
                 paths = self.sampler.obtain_samples(itr)
+
+                self._paths.append([len(x['observations']) for x in paths])
+
                 samples_data = self.sampler.process_samples(itr, paths)
                 self.log_diagnostics(paths)
                 self.optimize_policy(itr, samples_data)
@@ -269,6 +272,15 @@ class BatchPolopt(RLAlgorithm):
                     if self.pause_for_plot:
                         raw_input("Plotting evaluation run: Press Enter to "
                                   "continue...")
+
+        # EXTRA THINGS
+        # import pickle, datetime, dateutil
+
+        # now = datetime.datetime.now(dateutil.tz.tzlocal())
+        # timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
+        # with open("tmp/rllab/{}_worker_1_tlengths.pkl".format(timestamp), "w") as f:
+        #     pickle.dump(self._paths, f)
+        #     self._paths = []
 
         self.shutdown_worker()
 

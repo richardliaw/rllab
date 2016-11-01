@@ -37,7 +37,6 @@ class RaySampler(BatchSampler):
             scope=self.algo.scope,
         )
 
-        import ipdb; ipdb.set_trace()  # breakpoint b1c0ea12 //
         # with open("tmp/ray.pkl", "w") as f:
         #     pickle.dump(paths, f)
 

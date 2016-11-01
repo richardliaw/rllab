@@ -104,8 +104,6 @@ def sample_paths(
     :param max_path_length: horizon / maximum length of a single trajectory
     :return: a list of collected paths
     """
-    import ipdb; ipdb.set_trace()  # breakpoint 53b593b7 //
-
     singleton_pool.run_each(
         _worker_set_policy_params,
         [(policy_params, scope)] * singleton_pool.n_parallel
@@ -139,13 +137,15 @@ def ray_sample_paths(
     results = []
     remaining = []
     while num_samples < max_samples:
-        remaining.append(ray_rollout.remote(param_id, max_path_length))
+        for i in range(4 - len(remaining)):
+            remaining.append(ray_rollout.remote(param_id, max_path_length))
         done, remaining = ray.wait(remaining)
         result = ray.get(done[0])
 
         num_samples += len(result['rewards'])
         results.append(result)
 
+    # need to get length of results
     # pr.disable()
     # s = StringIO.StringIO()
     # sortby = 'cumulative'

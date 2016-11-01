@@ -3,8 +3,8 @@ from rllab.misc import tensor_utils
 
 
 def rollout(env, agent, max_path_length=np.inf, animated=False, speedup=1):
-    _state = np.random.get_state()
-    print "Rollout START", _state[2], _state[1][:5]
+    # _state = np.random.get_state()
+    # print "Rollout START", _state[2], _state[1][:5]
 
     observations = []
     actions = []
@@ -31,8 +31,8 @@ def rollout(env, agent, max_path_length=np.inf, animated=False, speedup=1):
         if animated:
             env.render()
 
-    _state = np.random.get_state()
-    print "Rollout DONE ", _state[2], _state[1][:5]
+    # _state = np.random.get_state()
+    # print "Rollout DONE ", _state[2], _state[1][:5]
     return dict(
         observations=tensor_utils.stack_tensor_list(observations),
         actions=tensor_utils.stack_tensor_list(actions),

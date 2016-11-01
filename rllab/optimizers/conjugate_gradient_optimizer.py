@@ -126,8 +126,6 @@ class ConjugateGradientOptimizer(Serializable):
     def loss(self, inputs, extra_inputs=None):
         _state = np.random.get_state()
         print "LOSS", _state[2], _state[1][:5]
-        import ipdb; ipdb.set_trace()  # breakpoint ec17ca75 //
-
 
         inputs = tuple(inputs)
         if extra_inputs is None:
