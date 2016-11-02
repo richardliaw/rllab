@@ -35,17 +35,17 @@ algo = TRPO(
     # plot=True,
 )
 
-
+N_PARALLEL = 4
 run_experiment_lite(
     algo.train(),
     # Number of parallel workers for sampling
-    n_parallel=4,
+    n_parallel=N_PARALLEL,
     # Only keep the snapshot parameters for the last iteration
     snapshot_mode="last",
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
 
     # seed=20,
-    log_dir=os.path.join("./Results/MTPerf/Work_4", timestamp)
+    log_dir=os.path.join("./Results/Car/MTPerf/Work_{}".format(N_PARALLEL), timestamp)
     # plot=True,
 )

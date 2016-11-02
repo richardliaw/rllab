@@ -118,7 +118,7 @@ def sample_paths(
         show_prog_bar=True
     )
 
-@ray.remote
+# @ray.remote
 def ray_rollout(policy_params, max_path_length):
     env = ray.reusables.env
     policy = ray.reusables.policy
