@@ -5,7 +5,10 @@ from rllab.misc import logger
 from rllab.misc import tensor_utils
 import pickle
 import numpy as np
-import ray
+try:
+    import ray
+except Exception e:
+    print "No Ray Installed"
 
 
 def _worker_init(G, id):
