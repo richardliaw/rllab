@@ -8,11 +8,13 @@ from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import stub, run_experiment_lite
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
+from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
+
 stub(globals())
 
-env = normalize(GymEnv("Pendulum-v0"))
+env = normalize(GymEnv("AirRaid-ram-v0", record_video=False))
 
-policy = GaussianMLPPolicy(
+policy = CategoricalMLPPolicy(
     env_spec=env.spec,
     # The neural network policy should have two hidden layers, each with 32 hidden units.
     hidden_sizes=(8, 8)
