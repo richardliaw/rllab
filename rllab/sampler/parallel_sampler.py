@@ -7,7 +7,7 @@ import pickle
 import numpy as np
 try:
     import ray
-except Exception e:
+except Exception:
     print "No Ray Installed"
 
 
