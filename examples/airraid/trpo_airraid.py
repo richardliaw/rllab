@@ -9,7 +9,11 @@ from rllab.misc.instrument import stub, run_experiment_lite
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
+import sys
 
+N_PARALLEL = int(sys.argv[1])
+print("$" * 10)
+print(N_PARALLEL)
 stub(globals())
 
 import pickle, datetime, dateutil, os
@@ -34,22 +38,20 @@ algo = TRPO(
     baseline=baseline,
     batch_size=4000,
     max_path_length=env.horizon,
-    n_itr=500,
+    n_itr=200,
     discount=0.995,
     step_size=0.1,
     # Uncomment both lines (this and the plot parameter below) to enable plotting
     # plot=True,
 )
-
 run_experiment_lite(
     algo.train(),
     # Number of parallel workers for sampling
-    n_parallel=8,
+    n_parallel=N_PARALLEL,
     # Only keep the snapshot parameters for the last iteration
     snapshot_mode="last",
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
-    seed=1,
-    log_dir=os.path.join("./tmp/results/airraid", timestamp)
+    log_dir=os.path.join("./Results/MultiWorker/airraid/{}".format(N_PARALLEL), timestamp)
     # plot=True,
 )
