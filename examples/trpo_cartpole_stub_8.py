@@ -35,7 +35,7 @@ algo = TRPO(
     # plot=True,
 )
 
-N_PARALLEL = 1
+N_PARALLEL = 8
 run_experiment_lite(
     algo.train(),
     # Number of parallel workers for sampling
