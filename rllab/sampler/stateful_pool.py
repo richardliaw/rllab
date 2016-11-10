@@ -135,6 +135,7 @@ class StatefulPool(object):
                     if show_prog_bar:
                         pbar.inc(counter.value - last_value)
                     last_value = counter.value
+            # import ipdb; ipdb.set_trace()
             return sum(results.get(), [])
         else:
             count = 0

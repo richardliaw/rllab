@@ -25,7 +25,7 @@ env = normalize(GymEnv("Pong-ram-v0", record_video=False))
 
 policy = CategoricalMLPPolicy(
     env_spec=env.spec,
-    hidden_sizes=(32,32)
+    hidden_sizes=(64,64)
     # The neural network policy should have two hidden layers, each with 32 hidden units.
 )
 
@@ -35,11 +35,12 @@ algo = TRPO(
     env=env,
     policy=policy,
     baseline=baseline,
-    batch_size=4000,
+    batch_size=40000,
     max_path_length=env.horizon,
     n_itr=200,
+    gae_lambda=0.97,
     discount=0.995,
-    step_size=0.1,
+    step_size=0.01,
     # Uncomment both lines (this and the plot parameter below) to enable plotting
     # plot=True,
 )
