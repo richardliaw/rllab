@@ -109,6 +109,7 @@ def log(s, with_prefix=True, with_timestamp=True):
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
         out = "%s | %s" % (timestamp, out)
+    
     if not _log_tabular_only:
         # Also log to stdout
         print(out)

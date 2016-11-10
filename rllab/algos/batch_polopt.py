@@ -8,6 +8,7 @@ from rllab.algos import util
 import rllab.misc.logger as logger
 import rllab.plotter as plotter
 from rllab.policies.base import Policy
+from datetime import datetime
 
 
 class BatchSampler(Sampler):
@@ -157,6 +158,9 @@ class BatchSampler(Sampler):
         logger.record_tabular('AverageReturn', np.mean(undiscounted_returns))
         logger.record_tabular('ExplainedVariance', ev)
         logger.record_tabular('NumTrajs', len(paths))
+
+        logger.record_tabular('TotalTrajLen', sum([len(path["rewards"]) for path in paths])) # self added
+
         logger.record_tabular('Entropy', ent)
         logger.record_tabular('Perplexity', np.exp(ent))
         logger.record_tabular('StdReturn', np.std(undiscounted_returns))
@@ -251,13 +255,16 @@ class BatchPolopt(RLAlgorithm):
         self.init_opt()
         for itr in xrange(self.current_itr, self.n_itr):
             with logger.prefix('itr #%d | ' % itr):
+                start = datetime.now()
                 paths = self.sampler.obtain_samples(itr)
-
-                self._paths.append([len(x['observations']) for x in paths])
-
+                end = datetime.now()
+                # self._paths.append([len(x['observations']) for x in paths])
                 samples_data = self.sampler.process_samples(itr, paths)
                 self.log_diagnostics(paths)
                 self.optimize_policy(itr, samples_data)
+
+                logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
+
                 logger.log("saving snapshot...")
                 params = self.get_itr_snapshot(itr, samples_data)
                 self.current_itr = itr + 1
