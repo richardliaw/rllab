@@ -38,7 +38,8 @@ algo = TRPO(
     baseline=baseline,
     batch_size=batch_size,
     max_path_length=env.horizon,
-    n_itr=200,
+    gae_lambda=0.97,
+    n_itr=int(5.6 * 10**6 / batch_size),
     discount=0.995,
     step_size=0.1,
     # Uncomment both lines (this and the plot parameter below) to enable plotting
