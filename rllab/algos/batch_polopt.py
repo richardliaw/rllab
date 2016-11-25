@@ -158,8 +158,16 @@ class BatchSampler(Sampler):
         logger.record_tabular('AverageReturn', np.mean(undiscounted_returns))
         logger.record_tabular('ExplainedVariance', ev)
         logger.record_tabular('NumTrajs', len(paths))
+        
+        path_lengths = [len(path["rewards"]) for path in paths]
 
-        logger.record_tabular('TotalTrajLen', sum([len(path["rewards"]) for path in paths])) # self added
+        logger.record_tabular('TotalSamples', sum(path_lengths)) # self added
+        
+        logger.record_tabular('MinTrajLen', np.min(path_lengths))
+        logger.record_tabular('BottomQuartileTrajLen', np.percentile(path_lengths, 25))
+        logger.record_tabular('AvgTrajLen', np.mean(path_lengths))
+        logger.record_tabular('TopQuartileTrajLen', np.percentile(path_lengths, 75))
+        logger.record_tabular('MaxTrajLen', np.max(path_lengths))
 
         logger.record_tabular('Entropy', ent)
         logger.record_tabular('Perplexity', np.exp(ent))
@@ -255,16 +263,11 @@ class BatchPolopt(RLAlgorithm):
         self.init_opt()
         for itr in xrange(self.current_itr, self.n_itr):
             with logger.prefix('itr #%d | ' % itr):
-                start = datetime.now()
                 paths = self.sampler.obtain_samples(itr)
-                end = datetime.now()
                 # self._paths.append([len(x['observations']) for x in paths])
                 samples_data = self.sampler.process_samples(itr, paths)
                 self.log_diagnostics(paths)
                 self.optimize_policy(itr, samples_data)
-
-                logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
-
                 logger.log("saving snapshot...")
                 params = self.get_itr_snapshot(itr, samples_data)
                 self.current_itr = itr + 1

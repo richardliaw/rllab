@@ -7,6 +7,7 @@ import pyprind
 import time
 import traceback
 import sys
+from datetime import datetime
 
 
 class ProgBarCounter(object):
@@ -112,6 +113,7 @@ class StatefulPool(object):
         :param threshold:
         :return:
         """
+        start = datetime.now()
         if args is None:
             args = tuple()
         if self.pool:
@@ -129,14 +131,20 @@ class StatefulPool(object):
                 time.sleep(0.1)
                 with lock:
                     if counter.value >= threshold:
+                        
+                        batch = datetime.now()
+                        logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
+
                         if show_prog_bar:
                             pbar.stop()
                         break
                     if show_prog_bar:
                         pbar.inc(counter.value - last_value)
                     last_value = counter.value
-            # import ipdb; ipdb.set_trace()
-            return sum(results.get(), [])
+            res = sum(results.get(), [])
+            end = datetime.now()
+            logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
+            return res
         else:
             count = 0
             results = []
