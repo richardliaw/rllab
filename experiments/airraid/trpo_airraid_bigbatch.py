@@ -36,7 +36,7 @@ algo = TRPO(
     env=env,
     policy=policy,
     baseline=baseline,
-    batch_size=40000,
+    batch_size=400000,
     max_path_length=env.horizon,
     n_itr=200,
     discount=0.995,
@@ -52,6 +52,6 @@ run_experiment_lite(
     snapshot_mode="last",
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
-    log_dir=os.path.join("./Results/Timing/Multiworker_big/airraid6k/{}".format(N_PARALLEL), timestamp)
+    log_dir=os.path.join("./Results/Timing/Multiworker_big/airraid400k/{}".format(N_PARALLEL), timestamp)
     # plot=True,
 )
