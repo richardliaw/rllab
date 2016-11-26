@@ -47,7 +47,7 @@ algo = TRPO(
 run_experiment_lite(
     algo.train(),
     # Number of parallel workers for sampling
-    n_parallel=16,
+    n_parallel=9,
     # Only keep the snapshot parameters for the last iteration
     snapshot_mode="last",
     # Specifies the seed for the experiment. If this is not provided, a random seed
