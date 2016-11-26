@@ -38,8 +38,7 @@ algo = TRPO(
     baseline=baseline,
     batch_size=batch_size,
     max_path_length=env.horizon,
-    gae_lambda=0.97,
-    n_itr=int(5.6 * 10**6 / batch_size),
+    n_itr=200,
     discount=0.995,
     step_size=0.1,
     # Uncomment both lines (this and the plot parameter below) to enable plotting
@@ -48,11 +47,12 @@ algo = TRPO(
 run_experiment_lite(
     algo.train(),
     # Number of parallel workers for sampling
-    n_parallel=4,
+    n_parallel=16,
     # Only keep the snapshot parameters for the last iteration
     snapshot_mode="last",
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
+    log_tabular_only=True,
     log_dir=os.path.join("./Results/batch_size/airraid6k/{}".format(batch_size), timestamp)
     # plot=True,
 )

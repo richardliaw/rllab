@@ -52,6 +52,7 @@ run_experiment_lite(
     snapshot_mode="last",
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
+    log_tabular_only=True,
     log_dir=os.path.join("./Results/Timing/Multiworker_big/airraid400k/{}".format(N_PARALLEL), timestamp)
     # plot=True,
 )
