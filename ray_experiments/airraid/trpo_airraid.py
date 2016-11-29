@@ -15,7 +15,7 @@ import traceback
 import numpy as np
 import ray
 
-ray_setting.WORKERS = 2
+ray_setting.WORKERS = 16
 
 ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
 

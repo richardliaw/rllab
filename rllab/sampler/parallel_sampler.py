@@ -152,8 +152,6 @@ def ray_sample_paths(
     stragglers = ray.get(remaining)
     end = datetime.now()
     logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())    
-    import ipdb; ipdb.set_trace()  # breakpoint a7a29e5d //
-
     results.extend(stragglers)
     return results
 
