@@ -8,6 +8,7 @@ import numpy as np
 try:
     from datetime import datetime
     import ray
+    from rllab import ray_setting
 except Exception:
     print "No Ray Installed"
 
@@ -126,16 +127,13 @@ def ray_rollout(policy_params, max_path_length):
     policy.set_param_values(policy_params)
     return rollout(env, policy, max_path_length)
 
+
 def ray_sample_paths(
         policy_params,
         max_samples,
         max_path_length=np.inf,
         scope=None):
-    # currently ignoring scope
-    # import cProfile, pstats, StringIO
-    # pr = cProfile.Profile()
-    # pr.enable()
-    num_workers = 4
+    num_workers = ray_setting.WORKERS
     start = datetime.now()
     param_id = ray.put(policy_params)    
     num_samples = 0
@@ -153,17 +151,10 @@ def ray_sample_paths(
     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
     stragglers = ray.get(remaining)
     end = datetime.now()
-    logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
-    results.extend(stragglers)
+    logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())    
+    import ipdb; ipdb.set_trace()  # breakpoint a7a29e5d //
 
-    # need to get length of results
-    # pr.disable()
-    # s = StringIO.StringIO()
-    # sortby = 'cumulative'
-    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    # ps.print_stats()
-    # print s.getvalue()
- 
+    results.extend(stragglers)
     return results
 
 def truncate_paths(paths, max_samples):
