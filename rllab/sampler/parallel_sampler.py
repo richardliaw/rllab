@@ -6,7 +6,7 @@ from rllab.misc import tensor_utils
 import pickle
 import numpy as np
 try:
-    import datetime
+    from datetime import datetime
     import ray
 except Exception:
     print "No Ray Installed"
@@ -119,7 +119,7 @@ def sample_paths(
         show_prog_bar=True
     )
 
-# @ray.remote
+@ray.remote
 def ray_rollout(policy_params, max_path_length):
     env = ray.reusables.env
     policy = ray.reusables.policy
