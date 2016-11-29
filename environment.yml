@@ -43,5 +43,8 @@ dependencies:
         - colorama
         - graphviz
         - six
+        - redis
+        - psutil
         - git+git://github.com/cloudpipe/cloudpickle.git@0d225a4695f1f65ae1cbb2e0bbc145e10167cce4 
+        - git+git://github.com/ray-project/ray.git#egg=numbuf&subdirectory=numbuf
 
