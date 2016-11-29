@@ -6,6 +6,7 @@ from rllab.misc import tensor_utils
 import pickle
 import numpy as np
 try:
+    import datetime
     import ray
 except Exception:
     print "No Ray Installed"
@@ -134,19 +135,26 @@ def ray_sample_paths(
     # import cProfile, pstats, StringIO
     # pr = cProfile.Profile()
     # pr.enable()
-
+    num_workers = 4
+    start = datetime.now()
     param_id = ray.put(policy_params)    
     num_samples = 0
     results = []
     remaining = []
     while num_samples < max_samples:
-        for i in range(4 - len(remaining)):
+        for i in range(num_workers - len(remaining)):
             remaining.append(ray_rollout.remote(param_id, max_path_length))
         done, remaining = ray.wait(remaining)
         result = ray.get(done[0])
 
         num_samples += len(result['rewards'])
         results.append(result)
+    batch = datetime.now()
+    logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
+    stragglers = ray.get(remaining)
+    end = datetime.now()
+    logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
+    results.extend(stragglers)
 
     # need to get length of results
     # pr.disable()
