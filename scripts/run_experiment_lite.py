@@ -52,7 +52,7 @@ def run_experiment(argv):
                         help='Name of the pickle file to resume experiment from.')
     parser.add_argument('--plot', type=ast.literal_eval, default=False,
                         help='Whether to plot the iteration results')
-    parser.add_argument('--log_tabular_only', type=ast.literal_eval, default=False,
+    parser.add_argument('--log_tabular_only', type=ast.literal_eval, default=True,
                         help='Whether to only print the tabular log information (in a horizontal format)')
     parser.add_argument('--seed', type=int,
                         help='Random seed for numpy')

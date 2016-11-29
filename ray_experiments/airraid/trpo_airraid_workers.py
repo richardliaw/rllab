@@ -15,8 +15,14 @@ import traceback
 import numpy as np
 import ray
 import sys
+from os import path as osp
+import datetime, dateutil
+
+now = datetime.datetime.now(dateutil.tz.tzlocal())
+timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
 ray_setting.WORKERS = int(sys.argv[1])
+ray_setting.log_dir = osp.join("./RayResults/Multiworker/airraid40k/{}".format(ray_setting.WORKERS), timestamp)
 
 ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
 
@@ -55,9 +61,9 @@ algo = TRPO(
     env=ray.reusables.env,
     policy=ray.reusables.policy,
     baseline=baseline,
-    batch_size=4000,
+    batch_size=40000,
     max_path_length=env.horizon,
-    n_itr=50,
+    n_itr=200,
     discount=0.995,
     step_size=0.1,
     sampler_cls=RaySampler
