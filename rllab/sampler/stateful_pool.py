@@ -95,6 +95,41 @@ class StatefulPool(object):
                 ret.append(runner(self.G, *args))
             return ret
 
+    def run_collect_continuous(self, collect_once, threshold, args=None, 
+                                    show_prog_bar=True, 
+                                    wait_for_stragglers=True):
+        start = datetime.now()
+        if args is None:
+            args = tuple()
+        assert self.pool, "MP Pool not available!"
+
+        manager = mp.Manager()
+        counter = manager.Value('i', 0)
+        lock = manager.RLock()
+        collected = manager.list()
+        results = self.pool.map_async(
+            _worker_run_collect_continuous,
+            [(collect_once, counter, lock, threshold, collected, args)] * self.n_parallel
+        )
+        # last_value = 0
+        while True:
+            time.sleep(0.1)
+            with lock:
+                if counter.value >= threshold:
+                    batch = datetime.now()
+                    logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
+                    break
+                # last_value = counter.value
+        if wait_for_stragglers:
+            res = results.get() # wait for stragglers
+        
+        res = collected._getvalue() # this may take a little time
+
+        end = datetime.now()
+        logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
+
+        return res
+
     def run_collect(self, collect_once, threshold, args=None, show_prog_bar=True):
         """
         Run the collector method using the worker pool. The collect_once method will receive 'G' as
@@ -187,6 +222,22 @@ def _worker_run_collect(all_args):
             result, inc = collect_once(singleton_pool.G, *args)
             collected.append(result)
             with lock:
+                counter.value += inc
+                if counter.value >= threshold:
+                    return collected
+    except Exception:
+        raise Exception("".join(traceback.format_exception(*sys.exc_info())))
+
+def _worker_run_collect_continuous(all_args):
+    try:
+        collect_once, counter, lock, threshold, collected, args = all_args
+        while True:
+            with lock:
+                if counter.value >= threshold:
+                    return collected
+            result, inc = collect_once(singleton_pool.G, *args)
+            with lock:
+                collected.append(result)
                 counter.value += inc
                 if counter.value >= threshold:
                     return collected

@@ -120,6 +120,32 @@ def sample_paths(
         show_prog_bar=True
     )
 
+def sample_paths_cont(
+        policy_params,
+        max_samples,
+        max_path_length=np.inf,
+        wait_for_stragglers=True,
+        scope=None):
+    """
+    :param policy_params: parameters for the policy. This will be updated on each worker process
+    :param max_samples: desired maximum number of samples to be collected. The actual number of collected samples
+    might be greater since all trajectories will be rolled out either until termination or until max_path_length is
+    reached
+    :param max_path_length: horizon / maximum length of a single trajectory
+    :return: a list of collected paths
+    """
+    singleton_pool.run_each(
+        _worker_set_policy_params,
+        [(policy_params, scope)] * singleton_pool.n_parallel
+    )
+    return singleton_pool.run_collect_continuous(
+        _worker_collect_one_path,
+        threshold=max_samples,
+        args=(max_path_length, scope),
+        show_prog_bar=True,
+        wait_for_stragglers=wait_for_stragglers
+    )
+
 @ray.remote
 def ray_rollout(policy_params, max_path_length):
     env = ray.reusables.env
@@ -132,7 +158,8 @@ def ray_sample_paths(
         policy_params,
         max_samples,
         max_path_length=np.inf,
-        scope=None):
+        scope=None,
+        wait_for_stragglers=False):
     num_workers = ray_setting.WORKERS
     start = datetime.now()
     param_id = ray.put(policy_params)    
@@ -149,10 +176,11 @@ def ray_sample_paths(
         results.append(result)
     batch = datetime.now()
     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
-    stragglers = ray.get(remaining)
+    if wait_for_stragglers:
+        stragglers = ray.get(remaining)  
+        results.extend(stragglers)
     end = datetime.now()
-    logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())    
-    results.extend(stragglers)
+    logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())  
     return results
 
 def truncate_paths(paths, max_samples):
