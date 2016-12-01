@@ -13,10 +13,11 @@ import pickle
 from rllab.policies.base import Policy
 
 class RaySampler(BatchSampler):
-    def __init__(self, algo):
+    def __init__(self, algo, wait_for_stragglers=True):
         """
         :type algo: BatchPolopt
         """
+        self.wait_for_stragglers = wait_for_stragglers
         self.algo = algo
 
     def start_worker(self):
@@ -35,6 +36,7 @@ class RaySampler(BatchSampler):
             max_samples=self.algo.batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
+            wait_for_stragglers=self.wait_for_stragglers
         )
         if self.algo.whole_paths:
             return paths

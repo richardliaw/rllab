@@ -98,7 +98,7 @@ class StatefulPool(object):
     def run_collect_continuous(self, collect_once, threshold, args=None, 
                                     show_prog_bar=True, 
                                     wait_for_stragglers=True):
-        start = datetime.now()
+        start = datetime.now() # we assume that last straggler doesn't affect 
         if args is None:
             args = tuple()
         assert self.pool, "MP Pool not available!"
