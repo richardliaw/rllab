@@ -13,6 +13,7 @@ import sys
 
 N_PARALLEL = int(sys.argv[1])
 
+stub(globals())
 import pickle, datetime, dateutil, os
 
 now = datetime.datetime.now(dateutil.tz.tzlocal())
