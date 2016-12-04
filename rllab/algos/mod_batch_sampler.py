@@ -9,12 +9,19 @@ from rllab.algos import util
 import rllab.misc.logger as logger
 import rllab.plotter as plotter
 
+NO_WAIT = 0
+WAIT_FOR_STRAGS = 1
+HIGH_USAGE = 2
+
 class ModBatchSampler(BatchSampler):
-    def __init__(self, algo, wait_for_stragglers=True, high_usage=False):
-        if high_usage:
-            assert not wait_for_stragglers
-        self.high_usage = high_usage
-        self.wait_for_stragglers = wait_for_stragglers
+    def __init__(self, algo, setting=WAIT_FOR_STRAGS):
+        self.high_usage = False
+        self.wait_for_stragglers = True
+        if setting == NO_WAIT:
+            self.wait_for_stragglers = False
+        elif setting == HIGH_USAGE:
+            self.high_usage = True
+            self.wait_for_stragglers = False
         super(ModBatchSampler, self).__init__(algo)
 
     def obtain_samples(self, itr):
@@ -28,7 +35,6 @@ class ModBatchSampler(BatchSampler):
             wait_for_stragglers=self.wait_for_stragglers,
             high_usage=self.high_usage
         )
-
         if self.algo.whole_paths:
             return paths
         else:

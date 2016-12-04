@@ -101,17 +101,19 @@ class StatefulPool(object):
         if args is None:
             args = tuple()
         assert self.pool, "MP Pool not available!"
+        import ipdb; ipdb.set_trace()  # breakpoint 504752b2 //
 
         manager = mp.Manager()
         counter = manager.Value('i', 0)
         lock = manager.RLock()
         if not hasattr(self, "_collected"):
             self._collected = manager.list()
+            logger.record_tabular('ObsFromLastItr', 0)
         else:
             with lock:
                 debug_startgetremain = datetime.now()
-                counter.value += sum(len(x) for x in self._collected)
-                print "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds()
+                counter.value += sum(len(x['rewards']) for x in self._collected)
+                print( "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds())
                 logger.record_tabular('ObsFromLastItr', counter.value)
 
         overflow = manager.list()
@@ -122,13 +124,14 @@ class StatefulPool(object):
         # last_value = 0
         while True:
             time.sleep(0.1)
+            with lock:
                 if counter.value >= threshold:
                     batch = datetime.now()
                     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
+                    res = self._collected._getvalue() # this may take a little time
+                    self._collected = overflow
                     break
-                # last_value = counter.value
-        res = self._collected._getvalue() # this may take a little time
-        self._collected = overflow
+            # last_value = counter.value
 
 
         end = datetime.now()
@@ -155,13 +158,15 @@ class StatefulPool(object):
         # last_value = 0
         while True:
             time.sleep(0.1)
+            with lock:
                 if counter.value >= threshold:
                     batch = datetime.now()
                     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
                     break
                 # last_value = counter.value
         if wait_for_stragglers:
-            res = results_handle.get() # wait for stragglers
+            results_handle.get() # wait for stragglers
+            res = collected._getvalue() 
         else:
             res = collected._getvalue() # this may take a little time
 
@@ -277,7 +282,7 @@ def _worker_run_collect_continuous(all_args):
                     return collected
             result, inc = collect_once(singleton_pool.G, *args)
             with lock:
-                collected.append(result)
+                collected.append(result) # this is changed to shared variable
                 counter.value += inc
                 if counter.value >= threshold:
                     return collected
@@ -293,11 +298,11 @@ def _worker_run_collect_highusage(all_args):
                     return collected
             result, inc = collect_once(singleton_pool.G, *args)
             with lock:
-                collected.append(result)
-                counter.value += inc
                 if counter.value >= threshold:
                     overflow.append(result)
                     return collected
+                counter.value += inc
+                collected.append(result)
     except Exception:
         raise Exception("".join(traceback.format_exception(*sys.exc_info())))
 

@@ -8,6 +8,7 @@ from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
 
 from rllab.algos.ray_sampler import RaySampler
+from rllab.algos.mod_batch_sampler import ModBatchSampler
 from examples.point_env import PointEnv
 from rllab.misc.ext import set_seed
 from rllab import ray_setting
@@ -19,11 +20,14 @@ from os import path as osp
 import datetime, dateutil
 
 ray_setting.WORKERS = int(sys.argv[1])
-WAIT_FOR_STRAGS = int(sys.argv[2])
+SETTING = int(sys.argv[2])
+
+assert 0 <= SETTING < 3
+
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
-ray_setting.log_dir = osp.join("./RayResults/Timing/Ray/airraid50k/{}".format(ray_setting.WORKERS), timestamp)
+ray_setting.log_dir = osp.join("./RayResults/Test/{}".format(ray_setting.WORKERS), timestamp)
 
 ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
 
@@ -64,11 +68,11 @@ algo = TRPO(
     baseline=baseline,
     batch_size=5000,
     max_path_length=env.horizon,
-    n_itr=200,
+    n_itr=20,
     discount=0.995,
     step_size=0.1,
     sampler_cls=RaySampler,
-    sampler_args={"wait_for_stragglers": WAIT_FOR_STRAGS }
+    sampler_args={"setting": SETTING  }
     # Uncomment both lines (this and the plot parameter below) to enable plotting
     # plot=True,
 )
