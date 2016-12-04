@@ -10,7 +10,10 @@ import rllab.misc.logger as logger
 import rllab.plotter as plotter
 
 class ModBatchSampler(BatchSampler):
-    def __init__(self, algo, wait_for_stragglers=True):
+    def __init__(self, algo, wait_for_stragglers=True, high_usage=False):
+        if high_usage:
+            assert not wait_for_stragglers
+        self.high_usage = high_usage
         self.wait_for_stragglers = wait_for_stragglers
         super(ModBatchSampler, self).__init__(algo)
 
@@ -22,7 +25,8 @@ class ModBatchSampler(BatchSampler):
             max_samples=self.algo.batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
-            wait_for_stragglers=self.wait_for_stragglers
+            wait_for_stragglers=self.wait_for_stragglers,
+            high_usage=self.high_usage
         )
 
         if self.algo.whole_paths:

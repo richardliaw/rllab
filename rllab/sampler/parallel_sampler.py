@@ -125,6 +125,7 @@ def sample_paths_cont(
         max_samples,
         max_path_length=np.inf,
         wait_for_stragglers=True,
+        high_usage=False,
         scope=None):
     """
     :param policy_params: parameters for the policy. This will be updated on each worker process
@@ -138,13 +139,21 @@ def sample_paths_cont(
         _worker_set_policy_params,
         [(policy_params, scope)] * singleton_pool.n_parallel
     )
-    return singleton_pool.run_collect_continuous(
+    if high_usage:
+        assert not wait_for_stragglers
+        return singleton_pool.run_collect_highusage(
         _worker_collect_one_path,
         threshold=max_samples,
         args=(max_path_length, scope),
-        show_prog_bar=True,
-        wait_for_stragglers=wait_for_stragglers
-    )
+        )
+    else:
+        return singleton_pool.run_collect_continuous(
+            _worker_collect_one_path,
+            threshold=max_samples,
+            args=(max_path_length, scope),
+            show_prog_bar=True,
+            wait_for_stragglers=wait_for_stragglers
+        )
 
 @ray.remote
 def ray_rollout(policy_params, max_path_length):
@@ -162,7 +171,6 @@ def ray_sample_paths(
         scope=None,
         wait_for_stragglers=False,
         high_usage=True):
-    import ipdb; ipdb.set_trace()  # breakpoint 739ba55e //
     global _remaining_tasks
     num_workers = ray_setting.WORKERS
     start = datetime.now()
