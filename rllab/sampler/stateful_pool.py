@@ -95,6 +95,47 @@ class StatefulPool(object):
                 ret.append(runner(self.G, *args))
             return ret
 
+    def run_collect_highusage(self, collect_once, threshold, args=None, 
+                                    show_prog_bar=True):
+        start = datetime.now() # we assume that last straggler doesn't affect 
+        if args is None:
+            args = tuple()
+        assert self.pool, "MP Pool not available!"
+
+        manager = mp.Manager()
+        counter = manager.Value('i', 0)
+        lock = manager.RLock()
+        if not hasattr(self, "_collected"):
+            self._collected = manager.list()
+        else:
+            with lock:
+                debug_startgetremain = datetime.now()
+                counter.value += sum(len(x) for x in self._collected)
+                print "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds()
+                logger.record_tabular('ObsFromLastItr', counter.value)
+
+        overflow = manager.list()
+        results_handle = self.pool.map_async(
+            _worker_run_collect_highusage, # TODO
+            [(collect_once, counter, lock, threshold, self._collected, overflow, args)] * self.n_parallel
+        )
+        # last_value = 0
+        while True:
+            time.sleep(0.1)
+                if counter.value >= threshold:
+                    batch = datetime.now()
+                    logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
+                    break
+                # last_value = counter.value
+        res = self._collected._getvalue() # this may take a little time
+        self._collected = overflow
+
+
+        end = datetime.now()
+        logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
+
+        return res
+
     def run_collect_continuous(self, collect_once, threshold, args=None, 
                                     show_prog_bar=True, 
                                     wait_for_stragglers=True):
@@ -107,23 +148,22 @@ class StatefulPool(object):
         counter = manager.Value('i', 0)
         lock = manager.RLock()
         collected = manager.list()
-        results = self.pool.map_async(
+        results_handle = self.pool.map_async(
             _worker_run_collect_continuous,
             [(collect_once, counter, lock, threshold, collected, args)] * self.n_parallel
         )
         # last_value = 0
         while True:
             time.sleep(0.1)
-            with lock:
                 if counter.value >= threshold:
                     batch = datetime.now()
                     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
                     break
                 # last_value = counter.value
         if wait_for_stragglers:
-            res = results.get() # wait for stragglers
-        
-        res = collected._getvalue() # this may take a little time
+            res = results_handle.get() # wait for stragglers
+        else:
+            res = collected._getvalue() # this may take a little time
 
         end = datetime.now()
         logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())
@@ -240,6 +280,23 @@ def _worker_run_collect_continuous(all_args):
                 collected.append(result)
                 counter.value += inc
                 if counter.value >= threshold:
+                    return collected
+    except Exception:
+        raise Exception("".join(traceback.format_exception(*sys.exc_info())))
+
+def _worker_run_collect_highusage(all_args):
+    try:
+        collect_once, counter, lock, threshold, collected, overflow, args = all_args
+        while True:
+            with lock:
+                if counter.value >= threshold:
+                    return collected
+            result, inc = collect_once(singleton_pool.G, *args)
+            with lock:
+                collected.append(result)
+                counter.value += inc
+                if counter.value >= threshold:
+                    overflow.append(result)
                     return collected
     except Exception:
         raise Exception("".join(traceback.format_exception(*sys.exc_info())))

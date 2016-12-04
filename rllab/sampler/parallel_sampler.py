@@ -153,19 +153,34 @@ def ray_rollout(policy_params, max_path_length):
     policy.set_param_values(policy_params)
     return rollout(env, policy, max_path_length)
 
+_remaining_tasks = []
 
 def ray_sample_paths(
         policy_params,
         max_samples,
         max_path_length=np.inf,
         scope=None,
-        wait_for_stragglers=False):
+        wait_for_stragglers=False,
+        high_usage=True):
+    import ipdb; ipdb.set_trace()  # breakpoint 739ba55e //
+    global _remaining_tasks
     num_workers = ray_setting.WORKERS
     start = datetime.now()
+
     param_id = ray.put(policy_params)    
     num_samples = 0
     results = []
     remaining = []
+
+    if high_usage:
+        debug_startgetremain = datetime.now()
+        previous_stragglers = ray.get(_remaining_tasks)
+        print "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds()
+
+        results.extend(previous_stragglers)
+        num_samples += sum(len(roll['rewards']) for roll in previous_stragglers)
+        logger.record_tabular('ObsFromLastItr', num_samples)
+
     while num_samples < max_samples:
         for i in range(num_workers - len(remaining)):
             remaining.append(ray_rollout.remote(param_id, max_path_length))
@@ -176,9 +191,14 @@ def ray_sample_paths(
         results.append(result)
     batch = datetime.now()
     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
+
     if wait_for_stragglers:
         stragglers = ray.get(remaining)  
         results.extend(stragglers)
+        remaining = []
+
+    _remaining_tasks = remaining
+
     end = datetime.now()
     logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())  
     return results

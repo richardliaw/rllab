@@ -164,9 +164,9 @@ class BatchSampler(Sampler):
         logger.record_tabular('TotalSamples', sum(path_lengths)) # self added
         
         logger.record_tabular('MinTrajLen', np.min(path_lengths))
-        logger.record_tabular('BottomQuartileTrajLen', np.percentile(path_lengths, 25))
+        logger.record_tabular('Q1TrajLen', np.percentile(path_lengths, 25))
         logger.record_tabular('AvgTrajLen', np.mean(path_lengths))
-        logger.record_tabular('TopQuartileTrajLen', np.percentile(path_lengths, 75))
+        logger.record_tabular('Q3TrajLen', np.percentile(path_lengths, 75))
         logger.record_tabular('MaxTrajLen', np.max(path_lengths))
 
         logger.record_tabular('Entropy', ent)
