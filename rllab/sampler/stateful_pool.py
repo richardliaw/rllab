@@ -101,8 +101,6 @@ class StatefulPool(object):
         if args is None:
             args = tuple()
         assert self.pool, "MP Pool not available!"
-        import ipdb; ipdb.set_trace()  # breakpoint 504752b2 //
-
         manager = mp.Manager()
         counter = manager.Value('i', 0)
         lock = manager.RLock()
