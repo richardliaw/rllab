@@ -32,7 +32,7 @@ def get_dir(setting, n_parallel):
         exp = "HIGHUSAGE"
     else:
         exp = "bad"
-    return "./RayResults/" + exp + "/Ray/airraid50k/{}".format(n_parallel)
+    return "./RayResults/" + exp + "/Ray/airraid1M/{}".format(n_parallel)
 
 ray_setting.log_dir = osp.join(get_dir(SETTING, ray_setting.WORKERS), timestamp)
 
