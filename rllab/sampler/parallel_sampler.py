@@ -169,8 +169,8 @@ def ray_sample_paths(
         max_samples,
         max_path_length=np.inf,
         scope=None,
-        wait_for_stragglers=False,
-        high_usage=True):
+        wait_for_stragglers=True,
+        high_usage=False):
     global _remaining_tasks
     num_workers = ray_setting.WORKERS
     start = datetime.now()

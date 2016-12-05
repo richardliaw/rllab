@@ -12,12 +12,19 @@ import ray
 import pickle
 from rllab.policies.base import Policy
 
+NO_WAIT = 0
+WAIT_FOR_STRAGS = 1
+HIGH_USAGE = 2
+
 class RaySampler(BatchSampler):
-    def __init__(self, algo, wait_for_stragglers=True):
-        """
-        :type algo: BatchPolopt
-        """
-        self.wait_for_stragglers = wait_for_stragglers
+    def __init__(self, algo, setting=WAIT_FOR_STRAGS):
+        self.high_usage = False
+        self.wait_for_stragglers = True
+        if setting == NO_WAIT:
+            self.wait_for_stragglers = False
+        elif setting == HIGH_USAGE:
+            self.high_usage = True
+            self.wait_for_stragglers = False
         self.algo = algo
 
     def start_worker(self):
@@ -36,7 +43,8 @@ class RaySampler(BatchSampler):
             max_samples=self.algo.batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
-            wait_for_stragglers=self.wait_for_stragglers
+            wait_for_stragglers=self.wait_for_stragglers,
+            high_usage=self.high_usage
         )
         if self.algo.whole_paths:
             return paths

@@ -19,7 +19,7 @@ from os import path as osp
 import datetime, dateutil
 
 ray_setting.WORKERS = int(sys.argv[1])
-WAIT_FOR_STRAGS = int(sys.argv[2])
+SETTING = int(sys.argv[2])
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -28,9 +28,6 @@ ray_setting.log_dir = osp.join("./RayResults/Timing/Ray/airraid50k/{}".format(ra
 ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
 
 def env_init():
-    # set_seed(1) 
-    # _state = np.random.get_state()
-    # print _state[0], _state[1][:3]
     return normalize(GymEnv("AirRaid-ram-v0", record_video=False))
 
 
@@ -42,11 +39,8 @@ ray.reusables.env = ray.Reusable(env_init, env_reinit)
 
 def policy_init():
     env = ray.reusables.env
-    # _state = np.random.get_state()
-    # print "POLICY INIT", _state[0], _state[1][:3]
 
-    print "using policy env"
-    # print traceback.print_stack()     
+    print "using policy env" 
     return CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=(64,64))
 
 def policy_reinit(policy):
@@ -62,13 +56,13 @@ algo = TRPO(
     env=ray.reusables.env,
     policy=ray.reusables.policy,
     baseline=baseline,
-    batch_size=15000,
+    batch_size=50000,
     max_path_length=env.horizon,
     n_itr=200,
     discount=0.995,
     step_size=0.1,
     sampler_cls=RaySampler,
-    sampler_args={"wait_for_stragglers": WAIT_FOR_STRAGS }
+    sampler_args={"setting": SETTING }
     # Uncomment both lines (this and the plot parameter below) to enable plotting
     # plot=True,
 )

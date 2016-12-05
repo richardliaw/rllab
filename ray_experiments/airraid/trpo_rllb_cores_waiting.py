@@ -13,7 +13,7 @@ from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
 import sys
 
 N_PARALLEL = int(sys.argv[1])
-WAIT_FOR_STRAGS = int(sys.argv[2])
+SETTING = int(sys.argv[2])
 
 stub(globals())
 
@@ -28,7 +28,6 @@ env = normalize(GymEnv("AirRaid-ram-v0", record_video=False))
 policy = CategoricalMLPPolicy(
     env_spec=env.spec,
     hidden_sizes=(64,64)
-    # The neural network policy should have two hidden layers, each with 32 hidden units.
 )
 
 baseline = LinearFeatureBaseline(env_spec=env.spec)
@@ -43,9 +42,7 @@ algo = TRPO(
     discount=0.995,
     step_size=0.1,
     sampler_cls=ModBatchSampler,
-    sampler_args={"wait_for_stragglers": WAIT_FOR_STRAGS }
-    # Uncomment both lines (this and the plot parameter below) to enable plotting
-    # plot=True,
+    sampler_args={"setting": SETTING }
 )
 run_experiment_lite(
     algo.train(),
