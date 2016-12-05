@@ -17,6 +17,18 @@ SETTING = int(sys.argv[2])
 
 stub(globals())
 
+def get_dir(setting, n_parallel):
+    if setting == 0:
+        exp = "NO_WAIT"
+    elif setting == 1:
+        exp = "WAIT"
+    elif setting == 2:
+        exp = "HIGHUSAGE"
+    else:
+        exp = "bad"
+    return "./RayResults/" + exp + "/RLLab/airraid50k/{}".format(n_parallel)
+
+
 import pickle, datetime, dateutil, os
 
 now = datetime.datetime.now(dateutil.tz.tzlocal())
@@ -53,6 +65,6 @@ run_experiment_lite(
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
     log_tabular_only=True,
-    log_dir=os.path.join("./RayResults/Timing/RLLab/airraid50k/{}".format(N_PARALLEL), timestamp)
+    log_dir=os.path.join(get_dir(SETTING, N_PARALLEL), timestamp)
     # plot=True,
 )

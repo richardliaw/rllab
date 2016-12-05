@@ -16,6 +16,9 @@ N_PARALLEL = int(sys.argv[1])
 stub(globals())
 import pickle, datetime, dateutil, os
 
+def get_dir(n_parallel):
+    return "./RayResults/WAIT/Default/airraid50k/{}".format(n_parallel)
+
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -36,7 +39,7 @@ algo = TRPO(
     baseline=baseline,
     batch_size=50000,
     max_path_length=env.horizon,
-    n_itr=200,
+    n_itr=100,
     discount=0.995,
     step_size=0.1,
     # Uncomment both lines (this and the plot parameter below) to enable plotting
@@ -51,6 +54,6 @@ run_experiment_lite(
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
     log_tabular_only=True,
-    log_dir=os.path.join("./RayResults/Timing/Default/airraid50k/{}".format(N_PARALLEL), timestamp)
+    log_dir=os.path.join(get_dir(N_PARALLEL), timestamp)
     # plot=True,
 )

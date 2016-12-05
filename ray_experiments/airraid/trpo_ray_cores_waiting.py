@@ -23,7 +23,18 @@ SETTING = int(sys.argv[2])
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
-ray_setting.log_dir = osp.join("./RayResults/Timing/Ray/airraid50k/{}".format(ray_setting.WORKERS), timestamp)
+def get_dir(setting, n_parallel):
+    if setting == 0:
+        exp = "NO_WAIT"
+    elif setting == 1:
+        exp = "WAIT"
+    elif setting == 2:
+        exp = "HIGHUSAGE"
+    else:
+        exp = "bad"
+    return "./RayResults/" + exp + "/Ray/airraid50k/{}".format(n_parallel)
+
+ray_setting.log_dir = osp.join(get_dir(SETTING, ray_setting.WORKERS), timestamp)
 
 ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
 
@@ -58,7 +69,7 @@ algo = TRPO(
     baseline=baseline,
     batch_size=50000,
     max_path_length=env.horizon,
-    n_itr=200,
+    n_itr=100,
     discount=0.995,
     step_size=0.1,
     sampler_cls=RaySampler,
