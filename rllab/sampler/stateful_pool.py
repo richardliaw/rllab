@@ -162,6 +162,7 @@ class StatefulPool(object):
                     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
                     break
                 # last_value = counter.value
+        print("Done sampling, getting values...")
         if wait_for_stragglers:
             results_handle.get() # wait for stragglers
             res = collected._getvalue() 

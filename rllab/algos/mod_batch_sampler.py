@@ -26,7 +26,7 @@ class ModBatchSampler(BatchSampler):
 
     def obtain_samples(self, itr):
         cur_params = self.algo.policy.get_param_values()
-
+        print "collecting paths..."
         paths = parallel_sampler.sample_paths_cont(
             policy_params=cur_params,
             max_samples=self.algo.batch_size,
