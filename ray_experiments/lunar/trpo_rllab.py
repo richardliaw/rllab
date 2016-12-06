@@ -37,7 +37,7 @@ now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
 
-env = normalize(GymEnv("AirRaid-ram-v0", record_video=False))
+env = normalize(GymEnv("LunarLander-v2", record_video=False))
 
 policy = CategoricalMLPPolicy(
     env_spec=env.spec,

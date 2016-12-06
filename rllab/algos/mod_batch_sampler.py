@@ -18,6 +18,7 @@ class ModBatchSampler(BatchSampler):
     def __init__(self, algo, setting=WAIT_FOR_STRAGS):
         self.high_usage = False
         self.wait_for_stragglers = True
+        self.count_prev = False
         if setting == NO_WAIT:
             self.wait_for_stragglers = False
         elif setting == HIGH_USAGE:
