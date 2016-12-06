@@ -95,7 +95,7 @@ class StatefulPool(object):
                 ret.append(runner(self.G, *args))
             return ret
 
-    def run_collect_highusage(self, collect_once, threshold, args=None, 
+    def run_collect_highusage(self, collect_once, threshold, args=None, count_prev=False,
                                     show_prog_bar=True):
         start = datetime.now() # we assume that last straggler doesn't affect 
         if args is None:
@@ -110,9 +110,11 @@ class StatefulPool(object):
         else:
             with lock:
                 debug_startgetremain = datetime.now()
-                counter.value += sum(len(x['rewards']) for x in self._collected)
+                prev_value = sum(len(x['rewards']) for x in self._collected)
+                if count_prev:
+                    counter.value += prev_value
                 print( "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds())
-                logger.record_tabular('ObsFromLastItr', counter.value)
+                logger.record_tabular('ObsFromLastItr', prev_value)
 
         overflow = manager.list()
         results_handle = self.pool.map_async(

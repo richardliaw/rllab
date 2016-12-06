@@ -126,6 +126,7 @@ def sample_paths_cont(
         max_path_length=np.inf,
         wait_for_stragglers=True,
         high_usage=False,
+        count_prev=False,
         scope=None):
     """
     :param policy_params: parameters for the policy. This will be updated on each worker process
