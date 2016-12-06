@@ -108,12 +108,13 @@ class StatefulPool(object):
             self._collected = manager.list()
             logger.record_tabular('ObsFromLastItr', 0)
         else:
+            print("waiting for lock...")
             with lock:
+                print("got the lock!")
                 debug_startgetremain = datetime.now()
                 prev_value = sum(len(x['rewards']) for x in self._collected)
                 if count_prev:
                     counter.value += prev_value
-                print( "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds())
                 logger.record_tabular('ObsFromLastItr', prev_value)
 
         overflow = manager.list()
