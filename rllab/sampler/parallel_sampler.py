@@ -170,7 +170,8 @@ def ray_sample_paths(
         max_path_length=np.inf,
         scope=None,
         wait_for_stragglers=True,
-        high_usage=False):
+        high_usage=False,
+        count_prev=False):
     global _remaining_tasks
     num_workers = ray_setting.WORKERS
     start = datetime.now()
@@ -186,8 +187,10 @@ def ray_sample_paths(
         print "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds()
 
         results.extend(previous_stragglers)
-        num_samples += sum(len(roll['rewards']) for roll in previous_stragglers)
-        logger.record_tabular('ObsFromLastItr', num_samples)
+        prev_samples = sum(len(roll['rewards']) for roll in previous_stragglers)
+        if count_prev: # NOT counting 
+            num_samples += prev_samples
+        logger.record_tabular('ObsFromLastItr', prev_samples)
 
     while num_samples < max_samples:
         for i in range(num_workers - len(remaining)):
