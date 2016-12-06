@@ -30,6 +30,8 @@ def get_dir(setting, n_parallel):
         exp = "WAIT"
     elif setting == 2:
         exp = "HIGHUSAGE"
+    elif setting == 3:
+        exp = "HUCP"
     else:
         exp = "bad"
     return "./RayResults/" + exp + "/Ray/airraid1M/{}".format(n_parallel)
