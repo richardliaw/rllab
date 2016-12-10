@@ -3,14 +3,29 @@ import argparse
 import os.path as osp
 import dateutil.tz
 import datetime
-
+import ray
 import ast
+import time
 
 
 WORKERS = 4
 tabular_log_file = './tmp/progress.csv'
 text_log_file = './tmp/debug.log'
 log_dir = './Results/'
+ids = range(WORKERS)
+@ray.remote
+def get_id():
+    time.sleep(0.2)
+    wid = ray.reusables.id
+    return wid
+
+def refresh_ids():
+    global ids
+    ids = ray.get([get_id.remote() for _ in range(WORKERS)])
+    assert len(set(ids)) == WORKERS
+    return ids
+
+
 
 def initialize(argv=[]):    
     now = datetime.datetime.now(dateutil.tz.tzlocal())
@@ -45,6 +60,8 @@ def initialize(argv=[]):
                         help='Pickled data for stub objects')
 
     args = parser.parse_args(argv[1:])
+    refresh_ids()
+
     global tabular_log_file, text_log_file
 
     tabular_log_file = osp.join(log_dir, args.tabular_log_file)

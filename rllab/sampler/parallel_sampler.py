@@ -160,8 +160,20 @@ def sample_paths_cont(
 def ray_rollout(policy_params, max_path_length):
     env = ray.reusables.env
     policy = ray.reusables.policy
+    selfid = ray.reusables.id
     policy.set_param_values(policy_params)
-    return rollout(env, policy, max_path_length)
+    return rollout(env, policy, max_path_length), selfid, str(datetime.now())
+
+def wasted_work(times, num_workers, starttime=None):
+    curtime = datetime.now()
+    most_recent_idx = min(times, key=lambda k: (curtime - times[k]).total_seconds())
+    most_recent = times[most_recent_idx]
+    wastedtime = sum((most_recent - ts).total_seconds() for ts in times.values())
+    if starttime:
+        total_time = (most_recent - starttime).total_seconds() * num_workers
+        logger.record_tabular("PcentWastedTime", wastedtime / total_time)
+    return wastedtime / num_workers
+
 
 _remaining_tasks = []
 
@@ -181,6 +193,7 @@ def ray_sample_paths(
     num_samples = 0
     results = []
     remaining = []
+    timing = {wid:start for wid in ray_setting.ids}
 
     if high_usage:
         debug_startgetremain = datetime.now()
@@ -194,10 +207,13 @@ def ray_sample_paths(
         logger.record_tabular('ObsFromLastItr', prev_samples)
 
     while num_samples < max_samples:
-        for i in range(num_workers - len(remaining)):
+        for i in range(num_workers - len(remaining)): # consider doing 2x in order to obtain good throughput
             remaining.append(ray_rollout.remote(param_id, max_path_length))
         done, remaining = ray.wait(remaining)
-        result = ray.get(done[0])
+        result, wid, timestr = ray.get(done[0])
+
+        #timing
+        timing[wid] = datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S.%f")
 
         num_samples += len(result['rewards'])
         results.append(result)
@@ -205,11 +221,16 @@ def ray_sample_paths(
     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
 
     if wait_for_stragglers:
-        stragglers = ray.get(remaining)  
-        results.extend(stragglers)
+        straggler_results = ray.get(remaining) 
+        stragglers = []
+        for r, wid, timestr in straggler_results:
+            timing[wid] = datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S.%f")
+            results.append(r)
         remaining = []
 
     _remaining_tasks = remaining
+
+    logger.record_tabular("WastePerWorker", wasted_work(timing, num_workers, starttime=start))
 
     end = datetime.now()
     logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())  
