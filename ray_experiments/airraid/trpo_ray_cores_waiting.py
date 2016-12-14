@@ -60,6 +60,14 @@ def policy_reinit(policy):
     # policy.reset()
     return policy
 
+def id_init():
+    return np.random.randint(1000)
+
+def id_reinit(id_worker):
+    return id_worker
+
+ray.reusables.id = ray.Reusable(id_init, id_reinit)
+
 ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
 
 env = ray.reusables.env
