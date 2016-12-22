@@ -71,14 +71,13 @@ ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
 
 env = ray.reusables.env
 baseline = LinearFeatureBaseline(env_spec=env.spec)
-
 algo = TRPO(
     env=ray.reusables.env,
     policy=ray.reusables.policy,
     baseline=baseline,
     batch_size=50000,
     max_path_length=env.horizon,
-    n_itr=80,
+    n_itr=200,
     discount=0.995,
     step_size=0.01,
     sampler_cls=RaySampler,
