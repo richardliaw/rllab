@@ -10,6 +10,12 @@ import rllab.plotter as plotter
 from rllab.policies.base import Policy
 from datetime import datetime
 
+try:
+    from rllab import ray_timing
+except Exception:
+    print "No Ray Installed"
+
+
 
 class BatchSampler(Sampler):
     def __init__(self, algo):
@@ -267,7 +273,13 @@ class BatchPolopt(RLAlgorithm):
                 # self._paths.append([len(x['observations']) for x in paths])
                 samples_data = self.sampler.process_samples(itr, paths)
                 self.log_diagnostics(paths)
+
+                start_time = str(datetime.now())
                 self.optimize_policy(itr, samples_data)
+                end_time = str(datetime.now())
+                ray_timing.log['optimization'].append((start_time, end_time))
+                ray_timing.trydump()
+
                 logger.log("saving snapshot...")
                 params = self.get_itr_snapshot(itr, samples_data)
                 self.current_itr = itr + 1
@@ -282,16 +294,6 @@ class BatchPolopt(RLAlgorithm):
                     if self.pause_for_plot:
                         raw_input("Plotting evaluation run: Press Enter to "
                                   "continue...")
-
-        # EXTRA THINGS
-        # import pickle, datetime, dateutil
-
-        # now = datetime.datetime.now(dateutil.tz.tzlocal())
-        # timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
-        # with open("tmp/rllab/{}_worker_1_tlengths.pkl".format(timestamp), "w") as f:
-        #     pickle.dump(self._paths, f)
-        #     self._paths = []
-
         self.shutdown_worker()
 
     def log_diagnostics(self, paths):

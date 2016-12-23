@@ -13,6 +13,7 @@ tabular_log_file = './tmp/progress.csv'
 text_log_file = './tmp/debug.log'
 log_dir = './Results/'
 ids = range(WORKERS)
+
 @ray.remote
 def get_id():
     time.sleep(0.2)

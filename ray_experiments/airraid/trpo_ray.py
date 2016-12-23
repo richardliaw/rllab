@@ -79,7 +79,7 @@ algo = TRPO(
     max_path_length=env.horizon,
     n_itr=200,
     discount=0.995,
-    step_size=0.01,
+    step_size=0.001,
     sampler_cls=RaySampler,
     sampler_args={"setting": SETTING }
     # Uncomment both lines (this and the plot parameter below) to enable plotting

@@ -9,6 +9,7 @@ try:
     from datetime import datetime
     import ray
     from rllab import ray_setting
+    from rllab import ray_timing
 except Exception:
     print "No Ray Installed"
 
@@ -158,13 +159,16 @@ def sample_paths_cont(
 
 @ray.remote
 def ray_rollout(policy_params, max_path_length):
+    """returns rollout dictionary, id, (start, end)"""
+    start_time = str(datetime.now())
     env = ray.reusables.env
     policy = ray.reusables.policy
     selfid = ray.reusables.id
     policy.set_param_values(policy_params)
-    return rollout(env, policy, max_path_length), selfid, str(datetime.now())
+    return rollout(env, policy, max_path_length), selfid, (start_time, str(datetime.now()))
 
 def wasted_work(times, num_workers, starttime=None):
+    """currently not used"""
     curtime = datetime.now()
     most_recent_idx = min(times, key=lambda k: (curtime - times[k]).total_seconds())
     most_recent = times[most_recent_idx]
@@ -193,27 +197,25 @@ def ray_sample_paths(
     num_samples = 0
     results = []
     remaining = []
-    timing = {wid:start for wid in ray_setting.ids}
+    timing = {wid:[] for wid in ray_setting.ids}
 
     if high_usage:
-        debug_startgetremain = datetime.now()
         previous_stragglers = ray.get(_remaining_tasks)
-        print "Getting stragglers took %0.3f seconds..." % (datetime.now() - debug_startgetremain).total_seconds()
-
         results.extend(previous_stragglers)
         prev_samples = sum(len(roll['rewards']) for roll in previous_stragglers)
         if count_prev: # NOT counting 
             num_samples += prev_samples
         logger.record_tabular('ObsFromLastItr', prev_samples)
 
+
     while num_samples < max_samples:
         for i in range(num_workers - len(remaining)): # consider doing 2x in order to obtain good throughput
             remaining.append(ray_rollout.remote(param_id, max_path_length))
         done, remaining = ray.wait(remaining)
-        result, wid, timestr = ray.get(done[0])
+        result, wid, timestamps = ray.get(done[0])
 
         #timing
-        timing[wid] = datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S.%f")
+        timing[wid].append(timestamps)
 
         num_samples += len(result['rewards'])
         results.append(result)
@@ -223,17 +225,19 @@ def ray_sample_paths(
     if wait_for_stragglers:
         straggler_results = ray.get(remaining) 
         stragglers = []
-        for r, wid, timestr in straggler_results:
-            timing[wid] = datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S.%f")
+        for r, wid, timestamps in straggler_results:
+            timing[wid].append(timestamps)
             results.append(r)
         remaining = []
 
     _remaining_tasks = remaining
 
-    logger.record_tabular("WastePerWorker", wasted_work(timing, num_workers, starttime=start))
+    # logger.record_tabular("WastePerWorker", wasted_work(timing, num_workers, starttime=start))
 
     end = datetime.now()
     logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())  
+    timing["total"] = (str(start), str(end))
+    ray_timing.log['sampling'].append(timing)
     return results
 
 def truncate_paths(paths, max_samples):
