@@ -17,7 +17,7 @@ _count = 0
 
 def trydump():
 	global _count, log
-	if len(log['sampling']) >= 10:
+	if len(log['sampling']) >= 100:
 		with open(osp.join(ray_setting.log_dir, "times_%d.json" % _count), "w") as f:
 			json.dump(log, f)
 		_count += 1
