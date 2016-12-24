@@ -69,6 +69,8 @@ def id_reinit(id_worker):
 ray.reusables.id = ray.Reusable(id_init, id_reinit)
 ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
 
+import time; time.sleep(1)
+
 env = ray.reusables.env
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 algo = TRPO(
@@ -78,8 +80,10 @@ algo = TRPO(
     batch_size=50000,
     max_path_length=env.horizon,
     n_itr=200,
+    gae=0.97,
+    optimizer_args={"reg_coeff": 0.1},
     discount=0.995,
-    step_size=0.001,
+    step_size=0.01,
     sampler_cls=RaySampler,
     sampler_args={"setting": SETTING }
     # Uncomment both lines (this and the plot parameter below) to enable plotting
