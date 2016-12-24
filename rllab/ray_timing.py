@@ -12,13 +12,13 @@ import ast
 import time
 import json
 
-log = {"sampling": [], "optimization": []}
+log = {"timing": [], "optimization": [], "samples":[]}
 _count = 0
 
 def trydump():
 	global _count, log
-	if len(log['sampling']) >= 100:
+	if len(log['timing']) >= 100:
 		with open(osp.join(ray_setting.log_dir, "times_%d.json" % _count), "w") as f:
 			json.dump(log, f)
 		_count += 1
-		log = {"sampling": [], "optimization": []}
+		log = {"timing": [], "optimization": [], "samples":[]}

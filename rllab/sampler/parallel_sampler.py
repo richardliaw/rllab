@@ -198,6 +198,7 @@ def ray_sample_paths(
     results = []
     remaining = []
     timing = {wid:[] for wid in ray_setting.ids}
+    log_samples = {wid:[] for wid in ray_setting.ids}
 
     if high_usage:
         previous_stragglers = ray.get(_remaining_tasks)
@@ -213,11 +214,13 @@ def ray_sample_paths(
             remaining.append(ray_rollout.remote(param_id, max_path_length))
         done, remaining = ray.wait(remaining)
         result, wid, timestamps = ray.get(done[0])
+        trajlen = len(result['rewards'])
 
         #timing
         timing[wid].append(timestamps)
+        log_samples[wid].append(trajlen)
 
-        num_samples += len(result['rewards'])
+        num_samples += trajlen
         results.append(result)
     batch = datetime.now()
     logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
@@ -237,7 +240,8 @@ def ray_sample_paths(
     end = datetime.now()
     logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())  
     timing["total"] = (str(start), str(end))
-    ray_timing.log['sampling'].append(timing)
+    ray_timing.log['timing'].append(timing)
+    ray_timing.log['samples'].append(log_samples)
     return results
 
 def truncate_paths(paths, max_samples):
