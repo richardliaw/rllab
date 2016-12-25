@@ -1,9 +1,9 @@
 #!/bin/bash
 
-ipython ray_experiments/airraid/trpo_ray.py 2 0 # no wait
-ipython ray_experiments/airraid/trpo_ray.py 4 0 # no wait
-ipython ray_experiments/airraid/trpo_ray.py 8 0 # no wait
-
-ipython ray_experiments/airraid/trpo_ray.py 2 1 # wait
-ipython ray_experiments/airraid/trpo_ray.py 4 1 # wait
-ipython ray_experiments/airraid/trpo_ray.py 8 1 # wait
+for x in {1..3}
+do
+	ipython ray_experiments/airraid/trpo_ray.py 4 1 # wait
+	ipython ray_experiments/airraid/trpo_ray.py 8 1 # wait
+	ipython ray_experiments/airraid/trpo_ray.py 12 1 # wait
+	ipython ray_experiments/airraid/trpo_ray.py 16 1 # wait
+done
