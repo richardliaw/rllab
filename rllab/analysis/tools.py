@@ -6,6 +6,7 @@ matplotlib.use("MacOSX")
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import os.path as osp
 import sys 
 import pandas as pd
 
@@ -115,20 +116,68 @@ def plot_trajectory_distributions(df, xmax=80, ymax=1200):
 
 convert = lambda timestr: datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S.%f")
 
+def convert_relative_time(dict_times):
+    assert "total" in dict_times
+    converted = {}
+    start, end = (convert(x) for x in dict_times['total'])
+    rel_time = lambda ts: (convert(ts) - start).total_seconds()
+    for i, (k, valarr) in enumerate(dict_times.items()):
+        if k == "total":
+            # plt.plot(rel_time(valarr[1]), i + 1, 'o')
+            continue
+
+        converted[str(k)] = np.array([[i + 1, rel_time(t0), rel_time(t1)] for t0, t1 in valarr])
+    return converted
+
+def efficiency(converted_dict, num_drop=0):
+    assert 0 <= num_drop < len(converted_dict), "Can't drop that many"
+    last_runs = [np.max(v, axis=0)[1:] for k, v in converted_dict.items()]
+    last_runs.sort(reverse=True, key=lambda r: r[1])
+    _nplastruns = np.asarray(last_runs) # converts to numpy array for fast indexing
+    worked = sum(_nplastruns[:num_drop, 0]) + sum(_nplastruns[num_drop:, 1]) #truncate ones that are not done, keep ones that are
+    total_time = _nplastruns[num_drop, 1] * len(converted_dict) 
+    return worked / total_time #, _nplastruns
+
+avg = lambda x, N: np.convolve(x, np.ones((N,))/N, mode='valid')
+
+def get_reltimedict_from_path(exp_path):
+    with open(exp_path + "times_0.json") as f:
+        times_w0 = json.load(f)
+    with open(exp_path + "times_1.json") as f:
+        times_w1 = json.load(f)
+
+    converted_times = [convert_relative_time(tdict) for tdict in times_w0['timing']]
+    converted_times.extend([convert_relative_time(tdict) for tdict in times_w1['timing']])
+    return converted_times
+
+
+def efficiency_matrix(exp_path):
+    converted_times = get_reltimedict_from_path(exp_path)
+    NUM_CORES = len(converted_times[0])
+
+    eff_matrix = np.asarray([[efficiency(cdict, core) for core in range(NUM_CORES)] 
+                                                    for cdict in converted_times])
+    return eff_matrix
+
+def max_efficiency_plot(exp_path):
+    df = dataframe_average(exp_path)
+    eff_matrix = efficiency_matrix(exp_path)
+    NUM_CORES = eff_matrix.shape[1]
+    plt.plot(np.argmax(eff_matrix, axis=1), df.AvgTrajLen, 'o', alpha=0.3)
+    plt.xlim([-0.5, NUM_CORES])
+
+
+def min_efficiency_plot(exp_path):
+    df = dataframe_average(exp_path)
+    eff_matrix = efficiency_matrix(exp_path)
+    NUM_CORES = eff_matrix.shape[1]
+    plt.plot(np.argmin(eff_matrix, axis=1), df.AvgTrajLen, 'o', alpha=0.3)
+    plt.xlim([-0.5, NUM_CORES])
+
 def plot_timechart(orig_dict, idx):
-    def convert_relative_time(dict_times):
-        assert "total" in dict_times
-        converted = {}
-        start, end = (convert(x) for x in dict_times['total'])
-        rel_time = lambda ts: (convert(ts) - start).total_seconds()
-        for i, (k, valarr) in enumerate(dict_times.items()):
-            if k == "total":
-                continue
-            converted[str(k)] = np.array([[i + 1, rel_time(t0), rel_time(t1)] for t0, t1 in valarr])
-        return converted
 
     def plot_converted_times(converted_times):
-        values = np.vstack([v for v in plt_times.values()])
+        values = np.vstack([v for v in converted_times.values()])
         worker, start, end = values[:, 0], values[:, 1], values[:, 2]
         plt.hlines(worker, start, end)
         plt.plot(start, worker, 'b^')

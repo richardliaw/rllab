@@ -230,6 +230,7 @@ def ray_sample_paths(
         stragglers = []
         for r, wid, timestamps in straggler_results:
             timing[wid].append(timestamps)
+            log_samples[wid].append(len(r['rewards']))
             results.append(r)
         remaining = []
 
