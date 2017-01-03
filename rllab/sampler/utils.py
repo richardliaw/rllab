@@ -6,6 +6,8 @@ def rollout(env, agent, max_path_length=np.inf, animated=False, speedup=1):
     # _state = np.random.get_state()
     # print "Rollout START", _state[2], _state[1][:5]
 
+    import cProfile
+
     observations = []
     actions = []
     rewards = []

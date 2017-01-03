@@ -115,6 +115,7 @@ def plot_trajectory_distributions(df, xmax=80, ymax=1200):
 #### PLOT TIMING
 
 convert = lambda timestr: datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S.%f")
+JSON_CACHE = {}
 
 def convert_relative_time(dict_times):
     assert "total" in dict_times
@@ -130,26 +131,34 @@ def convert_relative_time(dict_times):
     return converted
 
 def efficiency(converted_dict, num_drop=0):
-    assert 0 <= num_drop < len(converted_dict), "Can't drop that many"
-    last_runs = [np.max(v, axis=0)[1:] for k, v in converted_dict.items()]
-    last_runs.sort(reverse=True, key=lambda r: r[1])
+    worked, total_time = worked_times(converted_dict, num_drop)
+    return worked / total_time #, _nplastruns
+
+def worked_times(converted_dict, num_drop=0):
+    """Returns real amount of time worked (sum of real time), total time taken * num cores"""
+    assert 0 <= num_drop < len(converted_dict), "Can't drop that many" 
+    last_runs = [np.max(v, axis=0)[1:] for k, v in converted_dict.items()] #array of (start, end) of last runs for each worker
+    last_runs.sort(reverse=True, key=lambda r: r[1]) # sort by ending time
     _nplastruns = np.asarray(last_runs) # converts to numpy array for fast indexing
     worked = sum(_nplastruns[:num_drop, 0]) + sum(_nplastruns[num_drop:, 1]) #truncate ones that are not done, keep ones that are
     total_time = _nplastruns[num_drop, 1] * len(converted_dict) 
-    return worked / total_time #, _nplastruns
+    return worked, total_time
 
 avg = lambda x, N: np.convolve(x, np.ones((N,))/N, mode='valid')
 
 def get_reltimedict_from_path(exp_path):
-    with open(exp_path + "times_0.json") as f:
-        times_w0 = json.load(f)
-    with open(exp_path + "times_1.json") as f:
-        times_w1 = json.load(f)
+    if exp_path not in JSON_CACHE:
+        with open(exp_path + "times_0.json") as f:
+            times_w0 = json.load(f)
+        with open(exp_path + "times_1.json") as f:
+            times_w1 = json.load(f)
+        JSON_CACHE[exp_path] = [times_w0, times_w1]
+    else:
+        times_w0, times_w1 = JSON_CACHE[exp_path]
 
     converted_times = [convert_relative_time(tdict) for tdict in times_w0['timing']]
     converted_times.extend([convert_relative_time(tdict) for tdict in times_w1['timing']])
     return converted_times
-
 
 def efficiency_matrix(exp_path):
     converted_times = get_reltimedict_from_path(exp_path)
