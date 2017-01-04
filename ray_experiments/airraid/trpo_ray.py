@@ -18,7 +18,8 @@ import sys
 from os import path as osp
 import datetime, dateutil
 
-ray_setting.WORKERS = int(sys.argv[1])
+num_workers = int(sys.argv[1])
+ray_setting.WORKERS = num_workers
 SETTING = int(sys.argv[2])
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
@@ -67,7 +68,7 @@ def id_reinit(id_worker):
     return id_worker
 
 def numworker_init():
-    return ray_setting.WORKERS
+    return num_workers
 
 def numworker_reinit(num_w):
     return num_w
