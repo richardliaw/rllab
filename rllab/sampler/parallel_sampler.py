@@ -178,7 +178,7 @@ def ray_rollout(policy_params, max_path_length):
     sortby = 'cumulative'
     ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
     ps.print_stats()
-    with open("./tmp/%d_%d.txt" % (ray_setting.WORKERS, ray.reusables.id), "a") as f:
+    with open("./tmp/%d_%d.txt" % (ray.reusables.numworker, ray.reusables.id), "a") as f:
         f.write(s.getvalue())
         f.flush()
     return traj, selfid, (start_time, str(datetime.now()))

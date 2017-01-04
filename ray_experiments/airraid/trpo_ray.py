@@ -66,8 +66,16 @@ def id_init():
 def id_reinit(id_worker):
     return id_worker
 
+def numworker_init():
+    return ray_setting.WORKERS
+
+def numworker_reinit(num_w):
+    return num_w
+
+
 ray.reusables.id = ray.Reusable(id_init, id_reinit)
 ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
+ray.reusables.numworker = ray.Reusable(numworker_init, numworker_reinit)
 
 import time; time.sleep(1)
 
