@@ -63,7 +63,7 @@ def policy_reinit(policy):
     return policy
 
 def id_init():
-    return np.random.randint(1000)
+    return np.random.randint(10000)
 
 def id_reinit(id_worker):
     return id_worker
@@ -87,7 +87,7 @@ algo = TRPO(
     env=ray.reusables.env,
     policy=ray.reusables.policy,
     baseline=baseline,
-    batch_size=5000,
+    batch_size=50000,
     max_path_length=env.horizon,
     n_itr=200,
     gae=0.97,
@@ -105,7 +105,7 @@ print ray_setting.ids
 @ray.remote
 def getpin():
    p = psutil.Process()
-   time.sleep(5)
+   time.sleep(3)
    return p.cpu_affinity()
 
 print ray.get([getpin.remote() for _ in range(ray_setting.WORKERS)])

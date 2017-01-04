@@ -160,27 +160,27 @@ def sample_paths_cont(
 @ray.remote
 def ray_rollout(policy_params, max_path_length):
     """returns rollout dictionary, id, (start, end)"""
-    global profile
+    # global profile
     start_time = str(datetime.now())
     env = ray.reusables.env
     policy = ray.reusables.policy
     selfid = ray.reusables.id
     policy.set_param_values(policy_params)
 
-    import cProfile, pstats, StringIO
-    pr = cProfile.Profile()
-    pr.enable()
+    # import cProfile, pstats, StringIO
+    # pr = cProfile.Profile()
+    # pr.enable()
     
     traj = rollout(env, policy, max_path_length)
 
-    pr.disable()
-    s = StringIO.StringIO()
-    sortby = 'cumulative'
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    with open("./tmp/%d_%d.txt" % (ray.reusables.numworker, ray.reusables.id), "a") as f:
-        f.write(s.getvalue())
-        f.flush()
+    # pr.disable()
+    # s = StringIO.StringIO()
+    # sortby = 'name'
+    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    # ps.print_stats()
+    # with open("./tmp/%d_%d.txt" % (ray.reusables.numworker, ray.reusables.id), "a") as f:
+    #     f.write(s.getvalue())
+    #     f.flush()
     return traj, selfid, (start_time, str(datetime.now()))
 
 def wasted_work(times, num_workers, starttime=None):
@@ -196,6 +196,7 @@ def wasted_work(times, num_workers, starttime=None):
 
 
 _remaining_tasks = []
+
 def ray_sample_paths(
         policy_params,
         max_samples,
@@ -258,8 +259,6 @@ def ray_sample_paths(
     timing["total"] = (str(start), str(end))
     ray_timing.log['timing'].append(timing)
     ray_timing.log['samples'].append(log_samples)
-    import ipdb; ipdb.set_trace()  # breakpoint cc784955 //
-
     return results
 
 def truncate_paths(paths, max_samples):
