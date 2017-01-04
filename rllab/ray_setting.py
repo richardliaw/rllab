@@ -6,6 +6,7 @@ import datetime
 import ray
 import ast
 import time
+import psutil
 
 
 WORKERS = 4
@@ -26,6 +27,12 @@ def refresh_ids():
     assert len(set(ids)) == WORKERS
     return ids
 
+@ray.remote
+def pin(n):
+   # Pin whatever worker runs this remote function to core n
+   p = psutil.Process()
+   time.sleep(5)
+   p.cpu_affinity([n])
 
 
 def initialize(argv=[]):    
@@ -62,6 +69,8 @@ def initialize(argv=[]):
 
     args = parser.parse_args(argv[1:])
     refresh_ids()
+    print "WORKERS", WORKERS
+    [pin.remote(2 * n) for n in range(WORKERS)]
 
     global tabular_log_file, text_log_file
 

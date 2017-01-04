@@ -15,6 +15,7 @@ import traceback
 import numpy as np
 import ray
 import sys
+import psutil
 from os import path as osp
 import datetime, dateutil
 
@@ -100,5 +101,14 @@ algo = TRPO(
 )
 ray_setting.initialize() # initializes the log and such
 print ray_setting.ids
+
+@ray.remote
+def getpin():
+   p = psutil.Process()
+   time.sleep(5)
+   return p.cpu_affinity()
+
+print ray.get([getpin.remote() for _ in range(ray_setting.WORKERS)])
+
 algo.train()
 ray_setting.finish()
