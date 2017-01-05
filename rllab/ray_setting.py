@@ -70,7 +70,8 @@ def initialize(argv=[]):
     args = parser.parse_args(argv[1:])
     refresh_ids()
     print "WORKERS", WORKERS
-    [pin.remote(2 * n) for n in range(WORKERS)]
+    print "NOTE: Workers are being pinned linearly for use on EC2 m4 machines"
+    [pin.remote(n) for n in range(WORKERS)] # for use on EC2
 
     global tabular_log_file, text_log_file
 
