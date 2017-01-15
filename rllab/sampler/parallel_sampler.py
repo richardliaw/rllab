@@ -214,6 +214,7 @@ def ray_sample_paths(
     results = []
     remaining = []
     timing = {wid:[] for wid in ray_setting.ids}
+    print timing
     log_samples = {wid:[] for wid in ray_setting.ids}
 
     if high_usage:
