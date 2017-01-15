@@ -24,6 +24,7 @@ def get_id():
 def refresh_ids(multinode=False):
     global ids
     if multinode:
+        ray.worker.global_worker.redis_client.ltrim("workeridlist", 0, 0)
         def push_id(info):
             wid = ray.reusables.id
             ray.worker.global_worker.redis_client.lpush("workeridlist", wid)
