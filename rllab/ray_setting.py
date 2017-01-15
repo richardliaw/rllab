@@ -31,6 +31,8 @@ def refresh_ids(multinode=False):
         
         ray.worker.global_worker.run_function_on_all_workers(push_id)
         ids = ray.worker.global_worker.redis_client.lrange("workeridlist", 0, -1)
+        print ids
+
     else:
         ids = ray.get([get_id.remote() for _ in range(WORKERS)])
     assert len(set(ids)) == WORKERS
