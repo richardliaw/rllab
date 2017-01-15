@@ -101,7 +101,7 @@ algo = TRPO(
     optimizer_args={"reg_coeff": 0.1},
     discount=0.995,
     step_size=0.01,
-    sampler_cls=RaySampler,
+    sampler_cls=RayMultinodeSampler,
     sampler_args={"setting": SETTING }
     # Uncomment both lines (this and the plot parameter below) to enable plotting
     # plot=True,
