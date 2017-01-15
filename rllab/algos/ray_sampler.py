@@ -141,7 +141,7 @@ class RayMultinodeSampler(RaySampler):
             trajlen = len(result['rewards'])
 
             #timing
-            timing[wid].append(timestamps)
+            timing[wid].append(timestamp)
             log_samples[wid].append(trajlen)
 
             num_samples += trajlen
@@ -151,14 +151,14 @@ class RayMultinodeSampler(RaySampler):
         batch = datetime.now()
         logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
 
-        if wait_for_stragglers:
-            straggler_results = ray.get(remaining) 
-            stragglers = []
-            for r, wid, timestamps in straggler_results:
-                timing[wid].append(timestamps)
-                log_samples[wid].append(len(r['rewards']))
-                results.append(r)
-            remaining = []
+        # if wait_for_stragglers:
+        #     straggler_results = ray.get(remaining) 
+        #     stragglers = []
+        #     for r, wid, timestamps in straggler_results:
+        #         timing[wid].append(timestamps)
+        #         log_samples[wid].append(len(r['rewards']))
+        #         results.append(r)
+        #     remaining = []
 
         # _remaining_tasks = remaining
 
