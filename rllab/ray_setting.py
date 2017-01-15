@@ -21,9 +21,17 @@ def get_id():
     wid = ray.reusables.id
     return wid
 
-def refresh_ids():
+def refresh_ids(multinode=False):
     global ids
-    ids = ray.get([get_id.remote() for _ in range(WORKERS)])
+    if multinode:
+        def push_id(info):
+            wid = ray.reusables.id
+            ray.worker.global_worker.redis_client.lpush("workeridlist", wid)
+        
+        ray.worker.global_worker.run_function_on_all_workers(push_id)
+        ids = ray.worker.global_worker.redis_client.lrange("workeridlist", 0, -1)
+    else:
+        ids = ray.get([get_id.remote() for _ in range(WORKERS)])
     assert len(set(ids)) == WORKERS
     return ids
 
@@ -35,7 +43,7 @@ def pin(n):
    p.cpu_affinity([n])
 
 
-def initialize(argv=[]):    
+def initialize(argv=[], multinode=False):    
     now = datetime.datetime.now(dateutil.tz.tzlocal())
     timestamp = now.strftime('%Y_%m_%d_%H_%M_%S_%f_%Z')
 
@@ -68,7 +76,7 @@ def initialize(argv=[]):
                         help='Pickled data for stub objects')
 
     args = parser.parse_args(argv[1:])
-    refresh_ids()
+    refresh_ids(multinode=multinode)
     print "WORKERS:", WORKERS
     # print "NOTE: Workers are being pinned linearly for use on EC2 m4 machines"
     # [pin.remote(n) for n in range(WORKERS)] # for use on EC2
