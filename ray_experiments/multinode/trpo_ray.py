@@ -25,7 +25,7 @@ SETTING = 1
 ADDRESS = sys.argv[1]
 
 r = redis.StrictRedis(*ADDRESS.split(':'))
-NUM_WORKERS = len(r.lrange("Workers", 0, -1))
+NUM_WORKERS = len(r.keys("WorkerInfo:*"))
 ray_setting.WORKERS = NUM_WORKERS
 
 now = datetime.datetime.now(dateutil.tz.tzlocal())
