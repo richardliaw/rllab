@@ -30,7 +30,7 @@ def refresh_ids(multinode=False):
         def push_id(info):
             wid = ray.env.id
             print ray.worker.global_worker.node_ip_address
-            ray.worker.global_worker.redis_client.lpush("workeridlist", wid)
+            ray.worker.global_worker.redis_client.lpush("workeridlist", (wid, ray.worker.global_worker.node_ip_address))
         
         ray.worker.global_worker.run_function_on_all_workers(push_id)
         time.sleep(5)
@@ -38,7 +38,7 @@ def refresh_ids(multinode=False):
         ids = ray.worker.global_worker.redis_client.lrange("workeridlist", 0, -1)
         print ids
         assert len(set(ids)) == WORKERS + 1
-        ids = [int(i) for i in ids]
+        ids = [int(i[0]) for i in ids]
 
     else:
         ids = ray.get([get_id.remote() for _ in range(WORKERS)])
