@@ -7,7 +7,7 @@ from rllab.misc.instrument import stub, run_experiment_lite
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
 
-from rllab.algos.ray_sampler import RaySampler
+from rllab.algos.ray_sampler import RaySampler, RayMultinodeSampler
 from examples.point_env import PointEnv
 from rllab.misc.ext import set_seed
 from rllab import ray_setting
