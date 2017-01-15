@@ -18,10 +18,16 @@ import sys
 import psutil
 from os import path as osp
 import datetime, dateutil
+import redis
 
-num_workers = int(sys.argv[1])
-ray_setting.WORKERS = num_workers
-SETTING = int(sys.argv[2])
+# num_workers = int(sys.argv[1])
+SETTING = 1
+ADDRESS = sys.argv[1]
+
+r = redis.StrictRedis(*ADDRESS.split(':'))
+NUM_WORKERS = len(r.lrange("Workers", 0, -1))
+ray_setting.WORKERS = NUM_WORKERS
+
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -40,7 +46,7 @@ def get_dir(setting, n_parallel):
 
 ray_setting.log_dir = osp.join(get_dir(SETTING, ray_setting.WORKERS), timestamp)
 
-ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
+ray.init(redis_address=ADDRESS)
 
 def env_init():
     return normalize(GymEnv("AirRaid-ram-v0", record_video=False))
@@ -69,7 +75,7 @@ def id_reinit(id_worker):
     return id_worker
 
 def numworker_init():
-    return num_workers
+    return NUM_WORKERS
 
 def numworker_reinit(num_w):
     return num_w
@@ -78,6 +84,7 @@ def numworker_reinit(num_w):
 ray.reusables.id = ray.Reusable(id_init, id_reinit)
 ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
 ray.reusables.num_workers = ray.Reusable(numworker_init, numworker_reinit)
+
 
 import time; time.sleep(1)
 
@@ -99,16 +106,20 @@ algo = TRPO(
     # Uncomment both lines (this and the plot parameter below) to enable plotting
     # plot=True,
 )
+
+import ipdb; ipdb.set_trace()  # breakpoint 214372f7 //
+
+
 ray_setting.initialize() # initializes the log and such
 print ray_setting.ids
 
-@ray.remote
-def getpin():
-   p = psutil.Process()
-   time.sleep(3)
-   return p.cpu_affinity()
+# @ray.remote
+# def getpin():
+#    p = psutil.Process()
+#    time.sleep(3)
+#    return p.cpu_affinity()
 
-print ray.get([getpin.remote() for _ in range(ray_setting.WORKERS)])
+# print ray.get([getpin.remote() for _ in range(ray_setting.WORKERS)])
 
 algo.train()
 ray_setting.finish()

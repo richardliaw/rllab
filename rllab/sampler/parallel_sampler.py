@@ -206,7 +206,7 @@ def ray_sample_paths(
         high_usage=False,
         count_prev=False):
     global _remaining_tasks
-    num_workers = ray_setting.WORKERS
+    num_workers = ray.reusables.num_workers
     start = datetime.now()
 
     param_id = ray.put(policy_params)    

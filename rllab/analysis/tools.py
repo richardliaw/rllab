@@ -106,9 +106,9 @@ def customized_box_plot(percentiles, axes, redraw = True, *args, **kwargs):
 def plot_trajectory_distributions(df, xmax=80, ymax=1200):
     lengths = df[['MinTrajLen', 'Q1TrajLen', 'AvgTrajLen', 'Q3TrajLen', 'MaxTrajLen']]
     fig, ax = plt.subplots(figsize=(10, 5))
-    b = customized_box_plot(lengths.values[1::5], ax, redraw=True, notch=0, vert=1, whis=1.5)
-    ax.set_ylim([0, ymax])
-    _xticks = np.hstack([[0], (range(1, xmax, 5))])
+    b = customized_box_plot(lengths.values[5::5], ax, redraw=True, notch=0, vert=1, whis=1.5)
+    # ax.set_ylim([0, ymax])
+    _xticks = np.hstack([[0], (range(5, len(lengths.values), 5))])
     plt.xticks(range(len(_xticks)), _xticks, size='x-small')
 
 
@@ -122,12 +122,17 @@ def convert_relative_time(dict_times):
     converted = {}
     start, end = (convert(x) for x in dict_times['total'])
     rel_time = lambda ts: (convert(ts) - start).total_seconds()
-    for i, (k, valarr) in enumerate(dict_times.items()):
+    for i, k in enumerate(sorted(dict_times)):
+        valarr = dict_times[k]
         if k == "total":
             # plt.plot(rel_time(valarr[1]), i + 1, 'o')
             continue
 
-        converted[str(k)] = np.array([[i + 1, rel_time(t0), rel_time(t1)] for t0, t1 in valarr])
+        converted[str(k)] = np.array([[0, rel_time(t0), rel_time(t1)] for t0, t1 in valarr])
+    
+    for i, k in enumerate(sorted(converted, reverse=True, key=lambda y: np.max(converted[y][:, 2]))):
+        converted[k][:, 0] = i + 1
+
     return converted
 
 def efficiency(converted_dict, num_drop=0):
@@ -191,11 +196,11 @@ def plot_timechart(orig_dict, idx):
         plt.hlines(worker, start, end)
         plt.plot(start, worker, 'b^')
 
-    plt.figure(figsize=[20, 10])
+    plt.figure(figsize=[15, 10])
 
     plt_times = convert_relative_time(orig_dict['timing'][idx])
     plot_converted_times(plt_times)
-    plt.ylim([0, len(orig_dict['timing'][idx]) + 1])
+    plt.ylim([0, len(orig_dict['timing'][idx])])
 
 def plot_timechart_file(pth, idx):
     with open(pth) as f:
