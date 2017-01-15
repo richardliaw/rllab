@@ -56,7 +56,7 @@ def env_reinit(env):
     # env.reset()
     return env
 
-ray.reusables.env = ray.Reusable(env_init, env_reinit)
+ray.reusables.env = ray.EnvironmentVariable(env_init, env_reinit)
 
 def policy_init():
     env = ray.reusables.env
@@ -81,9 +81,9 @@ def numworker_reinit(num_w):
     return num_w
 
 
-ray.reusables.id = ray.Reusable(id_init, id_reinit)
-ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
-ray.reusables.num_workers = ray.Reusable(numworker_init, numworker_reinit)
+ray.reusables.id = ray.EnvironmentVariable(id_init, id_reinit)
+ray.reusables.policy = ray.EnvironmentVariable(policy_init, policy_reinit)
+ray.reusables.num_workers = ray.EnvironmentVariable(numworker_init, numworker_reinit)
 
 
 import time; time.sleep(1)
