@@ -121,11 +121,23 @@ class RayMultinodeSampler(RaySampler):
         #     logger.record_tabular('ObsFromLastItr', prev_samples)
 
 
-        while num_samples < max_samples:
-            for i in range(num_workers - len(remaining)): # consider doing 2x in order to obtain good throughput
-                remaining.append(parallel_sampler.ray_rollout.remote(param_id, max_path_length))
-            done, remaining = ray.wait(remaining)
-            result, wid, timestamps = ray.get(done[0])
+        # while num_samples < max_samples:
+        #     for i in range(num_workers - len(remaining)): # consider doing 2x in order to obtain good throughput
+        #         remaining.append(parallel_sampler.ray_rollout.remote(param_id, max_path_length))
+        #     done, remaining = ray.wait(remaining)
+        #     result, wid, timestamps = ray.get(done[0])
+        #     trajlen = len(result['rewards'])
+
+        #     #timing
+        #     timing[wid].append(timestamps)
+        #     log_samples[wid].append(trajlen)
+
+        #     num_samples += trajlen
+        #     results.append(result)
+        remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(50)]
+        result_info = ray.get(remaining)
+
+        for result, wid, timestamp in result_info:
             trajlen = len(result['rewards'])
 
             #timing
@@ -134,6 +146,8 @@ class RayMultinodeSampler(RaySampler):
 
             num_samples += trajlen
             results.append(result)
+
+
         batch = datetime.now()
         logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
 
