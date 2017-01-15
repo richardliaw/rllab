@@ -56,10 +56,10 @@ def env_reinit(env):
     # env.reset()
     return env
 
-ray.reusables.env = ray.EnvironmentVariable(env_init, env_reinit)
+ray.env.env = ray.EnvironmentVariable(env_init, env_reinit)
 
 def policy_init():
-    env = ray.reusables.env
+    env = ray.env.env
 
     print "using policy env" 
     return CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=(64,64))
@@ -81,18 +81,18 @@ def numworker_reinit(num_w):
     return num_w
 
 
-ray.reusables.id = ray.EnvironmentVariable(id_init, id_reinit)
-ray.reusables.policy = ray.EnvironmentVariable(policy_init, policy_reinit)
-ray.reusables.num_workers = ray.EnvironmentVariable(numworker_init, numworker_reinit)
+ray.env.id = ray.EnvironmentVariable(id_init, id_reinit)
+ray.env.policy = ray.EnvironmentVariable(policy_init, policy_reinit)
+ray.env.num_workers = ray.EnvironmentVariable(numworker_init, numworker_reinit)
 
 
 import time; time.sleep(1)
 
-env = ray.reusables.env
+env = ray.env.env
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 algo = TRPO(
-    env=ray.reusables.env,
-    policy=ray.reusables.policy,
+    env=ray.env.env,
+    policy=ray.env.policy,
     baseline=baseline,
     batch_size=50000,
     max_path_length=env.horizon,
