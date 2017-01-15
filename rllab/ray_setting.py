@@ -18,7 +18,7 @@ ids = range(WORKERS)
 @ray.remote
 def get_id():
     time.sleep(0.2)
-    wid = ray.reusables.id
+    wid = ray.env.id
     return wid
 
 def refresh_ids(multinode=False):
@@ -28,7 +28,7 @@ def refresh_ids(multinode=False):
         ray.worker.global_worker.redis_client.lpop("workeridlist")
         print "Before", ray.worker.global_worker.redis_client.lrange("workeridlist", 0, -1)
         def push_id(info):
-            wid = ray.reusables.id
+            wid = ray.env.id
             print ray.worker.global_worker.node_ip_address
             ray.worker.global_worker.redis_client.lpush("workeridlist", wid)
         

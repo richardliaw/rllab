@@ -101,7 +101,7 @@ class RayMultinodeSampler(RaySampler):
             high_usage=False,
             count_prev=False):
 
-        num_workers = ray.reusables.num_workers
+        num_workers = ray.env.num_workers
         start = datetime.now()
 
         param_id = ray.put(policy_params)    

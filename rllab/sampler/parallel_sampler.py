@@ -162,9 +162,9 @@ def ray_rollout(policy_params, max_path_length):
     """returns rollout dictionary, id, (start, end)"""
     # global profile
     start_time = str(datetime.now())
-    env = ray.reusables.env
-    policy = ray.reusables.policy
-    selfid = ray.reusables.id
+    env = ray.env.env
+    policy = ray.env.policy
+    selfid = ray.env.id
     policy.set_param_values(policy_params)
 
     # import cProfile, pstats, StringIO
@@ -178,7 +178,7 @@ def ray_rollout(policy_params, max_path_length):
     # sortby = 'name'
     # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
     # ps.print_stats()
-    # with open("./tmp/%d_%d.txt" % (ray.reusables.numworker, ray.reusables.id), "a") as f:
+    # with open("./tmp/%d_%d.txt" % (ray.env.numworker, ray.env.id), "a") as f:
     #     f.write(s.getvalue())
     #     f.flush()
     return traj, selfid, (start_time, str(datetime.now()))
@@ -206,7 +206,7 @@ def ray_sample_paths(
         high_usage=False,
         count_prev=False):
     global _remaining_tasks
-    num_workers = ray.reusables.num_workers
+    num_workers = ray.env.num_workers
     start = datetime.now()
 
     param_id = ray.put(policy_params)    
