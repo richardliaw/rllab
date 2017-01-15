@@ -93,7 +93,7 @@ class RayMultinodeSampler(RaySampler):
             paths_truncated = parallel_sampler.truncate_paths(paths, self.algo.batch_size)
             return paths_truncated
 
-    def sample_paths(policy_params,
+    def sample_paths(self, policy_params,
             max_samples,
             max_path_length=np.inf,
             scope=None,
