@@ -32,17 +32,17 @@ now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
 
 def get_dir(setting, n_parallel):
-    if setting == 0:
-        exp = "NO_WAIT"
-    elif setting == 1:
-        exp = "WAIT"
-    elif setting == 2:
-        exp = "HIGHUSAGE"
-    elif setting == 3:
-        exp = "HUCP"
-    else:
-        exp = "bad"
-    return "./RayResults/" + exp + "/airraid/Ray/{}".format(n_parallel)
+    # if setting == 0:
+    #     exp = "NO_WAIT"
+    # elif setting == 1:
+    #     exp = "WAIT"
+    # elif setting == 2:
+    #     exp = "HIGHUSAGE"
+    # elif setting == 3:
+    #     exp = "HUCP"
+    # else:
+    #     exp = "bad"
+    return "./RayResults/airraid/Ray/{}".format(n_parallel)
 
 ray_setting.log_dir = osp.join(get_dir(SETTING, ray_setting.WORKERS), timestamp)
 
@@ -96,7 +96,7 @@ algo = TRPO(
     baseline=baseline,
     batch_size=50000,
     max_path_length=env.horizon,
-    n_itr=200,
+    n_itr=70,
     gae=0.97,
     optimizer_args={"reg_coeff": 0.1},
     discount=0.995,
