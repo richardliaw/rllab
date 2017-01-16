@@ -137,16 +137,17 @@ class RayMultinodeSampler(RaySampler):
         remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(int(self.num_batch_tasks * 1.1))]
 
         while num_samples < max_samples and len(remaining):
-            done, remaining = ray.wait(remaining)
-            result, wid, timestamps = ray.get(done[0])
-            trajlen = len(result['rewards'])
+            done, remaining = ray.wait(remaining, num_returns=20)
+            for d in done:
+                result, wid, timestamps = ray.get(d)
+                trajlen = len(result['rewards'])
 
-            #timing
-            timing[wid].append(timestamp)
-            log_samples[wid].append(trajlen)
+                #timing
+                timing[wid].append(timestamp)
+                log_samples[wid].append(trajlen)
 
-            num_samples += trajlen
-            results.append(result)
+                num_samples += trajlen
+                results.append(result)
 
 
         batch = datetime.now()
