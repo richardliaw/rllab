@@ -134,22 +134,23 @@ class RayMultinodeSampler(RaySampler):
         #     num_samples += trajlen
         #     results.append(result)
 
-        remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(int(self.num_batch_tasks * 1.1))]
+        remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(int(self.num_batch_tasks * 1.5))]
 
-        # while False and num_samples < max_samples and len(remaining):
-            # done, remaining = ray.wait(remaining, num_returns=20)
+        while num_samples < max_samples and len(remaining):
+            done, remaining = ray.wait(remaining, num_returns=min(len(remaining), 20))
        
-        done = ray.get(remaining)
-        for d in done:
-            result, wid, timestamp = ray.get(d)
-            trajlen = len(result['rewards'])
-
-            #timing
-            timing[wid].append(timestamp)
-            log_samples[wid].append(trajlen)
-
-            num_samples += trajlen
-            results.append(result)
+            # done = ray.get(remaining)
+            for d in done:
+                # result, wid, timestamp = d
+                result, wid, timestamp = ray.get(d)
+                trajlen = len(result['rewards'])
+    
+                #timing
+                timing[wid].append(timestamp)
+                log_samples[wid].append(trajlen)
+    
+                num_samples += trajlen
+                results.append(result)
 
 
         batch = datetime.now()
@@ -173,6 +174,7 @@ class RayMultinodeSampler(RaySampler):
         timing["total"] = (str(start), str(end))
         ray_timing.log['timing'].append(timing)
         ray_timing.log['samples'].append(log_samples)
-        self.num_batch_tasks = num_samples / sum(len(jobs) for jobs in log_samples.values())
+        avg_traj_len = num_samples / sum(len(jobs) for jobs in log_samples.values())
+        self.num_batch_tasks = self.algo.batch_size / avg_traj_len
         logger.log("Next run will schedule %f tasks..." % self.num_batch_tasks)
         return results
