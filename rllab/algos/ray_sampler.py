@@ -139,7 +139,7 @@ class RayMultinodeSampler(RaySampler):
         while num_samples < max_samples and len(remaining):
             done, remaining = ray.wait(remaining, num_returns=20)
             for d in done:
-                result, wid, timestamps = ray.get(d)
+                result, wid, timestamp = ray.get(d)
                 trajlen = len(result['rewards'])
 
                 #timing
