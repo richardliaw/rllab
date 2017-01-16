@@ -108,6 +108,8 @@ def initialize(argv=[], multinode=False):
     logger.push_prefix("[%s] " % args.exp_name)
 
 def finish():
+    from rllab import ray_timing
+    ray_timing.multinode_save_statistics()
     logger.remove_tabular_output(tabular_log_file)
     logger.remove_text_output(text_log_file)
     logger.pop_prefix()

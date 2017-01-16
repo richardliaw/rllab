@@ -167,6 +167,8 @@ def ray_rollout(policy_params, max_path_length):
     selfid = ray.env.id
     policy.set_param_values(policy_params)
 
+    ray.log_event("set params", contents={"env": str(env)})
+
     # import cProfile, pstats, StringIO
     # pr = cProfile.Profile()
     # pr.enable()

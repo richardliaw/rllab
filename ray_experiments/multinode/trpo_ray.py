@@ -107,9 +107,6 @@ algo = TRPO(
     # plot=True,
 )
 
-import ipdb; ipdb.set_trace()  # breakpoint 214372f7 //
-
-
 ray_setting.initialize(multinode=True) # initializes the log and such
 print ray_setting.ids
 

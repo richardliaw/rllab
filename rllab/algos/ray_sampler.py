@@ -68,7 +68,7 @@ class RaySampler(BatchSampler):
 
 class RayMultinodeSampler(RaySampler):
     def __init__(self, algo, **kwargs):
-
+        self.num_batch_tasks = 100
         self._remaining_tasks = []
         super(RayMultinodeSampler, self).__init__(algo, **kwargs)
 
@@ -121,7 +121,6 @@ class RayMultinodeSampler(RaySampler):
         #     logger.record_tabular('ObsFromLastItr', prev_samples)
 
 
-        # while num_samples < max_samples:
         #     for i in range(num_workers - len(remaining)): # consider doing 2x in order to obtain good throughput
         #         remaining.append(parallel_sampler.ray_rollout.remote(param_id, max_path_length))
         #     done, remaining = ray.wait(remaining)
@@ -134,10 +133,12 @@ class RayMultinodeSampler(RaySampler):
 
         #     num_samples += trajlen
         #     results.append(result)
-        remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(50)]
-        result_info = ray.get(remaining)
 
-        for result, wid, timestamp in result_info:
+        remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(int(self.num_batch_tasks * 1.1))]
+
+        while num_samples < max_samples and len(remaining):
+            done, remaining = ray.wait(remaining)
+            result, wid, timestamps = ray.get(done[0])
             trajlen = len(result['rewards'])
 
             #timing
@@ -169,4 +170,6 @@ class RayMultinodeSampler(RaySampler):
         timing["total"] = (str(start), str(end))
         ray_timing.log['timing'].append(timing)
         ray_timing.log['samples'].append(log_samples)
+        self.num_batch_tasks = num_samples / sum(len(jobs) for jobs in log_samples.values())
+        logger.log("Next run will schedule %f tasks..." % self.num_batch_tasks)
         return results
