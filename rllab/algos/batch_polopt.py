@@ -9,6 +9,7 @@ import rllab.misc.logger as logger
 import rllab.plotter as plotter
 from rllab.policies.base import Policy
 from datetime import datetime
+import time
 
 try:
     from rllab import ray_timing

@@ -6,9 +6,11 @@ from rllab.sampler.base import Sampler
 from rllab.misc import special
 from rllab.misc import tensor_utils
 from rllab.algos import util
+from rllab.sampler.utils import rollout
 import rllab.misc.logger as logger
 import rllab.plotter as plotter
 import time
+from os import path as osp
 try:
     from datetime import datetime
     import ray
@@ -123,7 +125,7 @@ class RayMultinodeSampler(RaySampler):
                 result, info = ray.get(d)
                 trajlen = len(result['rewards'])
     
-                log_samples[wid].append(trajlen)
+                log_samples[info['worker_id']].append(trajlen)
     
                 num_samples += trajlen
 
