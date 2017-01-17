@@ -274,11 +274,11 @@ class BatchPolopt(RLAlgorithm):
                 samples_data = self.sampler.process_samples(itr, paths)
                 self.log_diagnostics(paths)
 
-                start_time = str(datetime.now())
+                start_time = time.time()
+                logger.record_tabular('OptStart', start_time)
                 self.optimize_policy(itr, samples_data)
-                end_time = str(datetime.now())
-                ray_timing.log['optimization'].append((start_time, end_time))
-                ray_timing.trydump()
+                end_time = time.time()
+                logger.record_tabular('OptEnd', end_time)
 
                 logger.log("saving snapshot...")
                 params = self.get_itr_snapshot(itr, samples_data)

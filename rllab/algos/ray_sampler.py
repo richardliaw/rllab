@@ -8,6 +8,7 @@ from rllab.misc import tensor_utils
 from rllab.algos import util
 import rllab.misc.logger as logger
 import rllab.plotter as plotter
+import time
 try:
     from datetime import datetime
     import ray
@@ -69,7 +70,9 @@ class RaySampler(BatchSampler):
 class RayMultinodeSampler(RaySampler):
     def __init__(self, algo, **kwargs):
         self.num_batch_tasks = 100
-        self._remaining_tasks = []
+        self.task_info = []
+        self.timing = []
+        self.cur_itr = 0
         super(RayMultinodeSampler, self).__init__(algo, **kwargs)
 
 
@@ -101,80 +104,81 @@ class RayMultinodeSampler(RaySampler):
             high_usage=False,
             count_prev=False):
 
-        num_workers = ray.env.num_workers
-        start = datetime.now()
+        self.cur_itr += 1
+        start = time.time()
+        logger.record_tabular('SampleStart', start)
 
         param_id = ray.put(policy_params)    
         num_samples = 0
         results = []
         remaining = []
-        timing = {wid:[] for wid in ray_setting.ids}
-        print timing
         log_samples = {wid:[] for wid in ray_setting.ids}
 
-        # if high_usage:
-        #     previous_stragglers = ray.get(_remaining_tasks)
-        #     results.extend(previous_stragglers)
-        #     prev_samples = sum(len(roll['rewards']) for roll in previous_stragglers)
-        #     if count_prev: # NOT counting 
-        #         num_samples += prev_samples
-        #     logger.record_tabular('ObsFromLastItr', prev_samples)
-
-
-        #     for i in range(num_workers - len(remaining)): # consider doing 2x in order to obtain good throughput
-        #         remaining.append(parallel_sampler.ray_rollout.remote(param_id, max_path_length))
-        #     done, remaining = ray.wait(remaining)
-        #     result, wid, timestamps = ray.get(done[0])
-        #     trajlen = len(result['rewards'])
-
-        #     #timing
-        #     timing[wid].append(timestamps)
-        #     log_samples[wid].append(trajlen)
-
-        #     num_samples += trajlen
-        #     results.append(result)
-
-        remaining = [parallel_sampler.ray_rollout.remote(param_id, max_path_length) for _ in range(int(self.num_batch_tasks * 1.5))]
+        remaining = [ray_rollout_debug.remote(param_id, max_path_length, {"itr": self.cur_itr, "job_id": "%d_%d" % (self.cur_itr, i)}) 
+                        for i in range(int(self.num_batch_tasks * 1.5))]
 
         while num_samples < max_samples and len(remaining):
-            done, remaining = ray.wait(remaining, num_returns=min(len(remaining), 20))
-       
-            # done = ray.get(remaining)
+            done, remaining = ray.wait(remaining, num_returns=min(len(remaining), 5))
             for d in done:
-                # result, wid, timestamp = d
-                result, wid, timestamp = ray.get(d)
+                result, info = ray.get(d)
                 trajlen = len(result['rewards'])
     
-                #timing
-                timing[wid].append(timestamp)
                 log_samples[wid].append(trajlen)
     
                 num_samples += trajlen
+
+                info["collected_itr"] = self.cur_itr
+                self.task_info.append(info)
+
                 results.append(result)
 
+        end = time.time()
+        logger.record_tabular('SampleEnd', end)
 
-        batch = datetime.now()
-        logger.record_tabular('BatchLimitTime', (batch - start).total_seconds())
-
-        # if wait_for_stragglers:
-        #     straggler_results = ray.get(remaining) 
-        #     stragglers = []
-        #     for r, wid, timestamps in straggler_results:
-        #         timing[wid].append(timestamps)
-        #         log_samples[wid].append(len(r['rewards']))
-        #         results.append(r)
-        #     remaining = []
-
-        # _remaining_tasks = remaining
-
-        # logger.record_tabular("WastePerWorker", wasted_work(timing, num_workers, starttime=start))
-
-        end = datetime.now()
-        logger.record_tabular('SampleTimeTaken', (end - start).total_seconds())  
-        timing["total"] = (str(start), str(end))
-        ray_timing.log['timing'].append(timing)
-        ray_timing.log['samples'].append(log_samples)
+        # ray_timing.log['samples'].append(log_samples)
         avg_traj_len = num_samples / sum(len(jobs) for jobs in log_samples.values())
         self.num_batch_tasks = self.algo.batch_size / avg_traj_len
-        logger.log("Next run will schedule %f tasks..." % self.num_batch_tasks)
         return results
+
+    def shutdown_worker(self):
+        import csv
+        keys = self.task_info[0].keys()
+        with open(osp.join(ray_setting.log_dir, "tasks.csv"), "w") as f:
+            writer = csv.DictWriter(f, keys)
+            writer.writeheader()
+            for task in self.task_info:
+                writer.writerows(self.task_info)
+        print "Done saving task info."
+        
+
+
+@ray.remote
+def ray_rollout_debug(policy_params, max_path_length, info={}):
+    """returns rollout dictionary, id, (start, end)"""
+    # global profile
+    env = ray.env.env
+    policy = ray.env.policy
+    selfid = ray.env.id
+    policy.set_param_values(policy_params)
+
+    # TODO: log job number
+    ray.log_event("rollout:id", contents={"id": info["job_id"]})
+
+    # import cProfile, pstats, StringIO
+    # pr = cProfile.Profile()
+    # pr.enable()
+    info["worker_id"] = selfid
+    info["start"] = time.time()
+    traj = rollout(env, policy, max_path_length)
+    info["end"] = time.time()
+    info["trajlen"] = len(traj['rewards'])
+
+    # pr.disable()
+    # s = StringIO.StringIO()
+    # sortby = 'name'
+    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    # ps.print_stats()
+    # with open("./tmp/%d_%d.txt" % (ray.env.numworker, ray.env.id), "a") as f:
+    #     f.write(s.getvalue())
+    #     f.flush()
+    return traj, info

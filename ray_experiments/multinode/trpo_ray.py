@@ -69,7 +69,7 @@ def policy_reinit(policy):
     return policy
 
 def id_init():
-    return np.random.randint(10000)
+    return str(np.random.randint(10000)) + "_" + str(ray.worker.global_worker.node_ip_address)
 
 def id_reinit(id_worker):
     return id_worker
