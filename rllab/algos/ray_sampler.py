@@ -148,8 +148,7 @@ class RayMultinodeSampler(RaySampler):
         with open(osp.join(ray_setting.log_dir, "tasks.csv"), "w") as f:
             writer = csv.DictWriter(f, keys)
             writer.writeheader()
-            for task in self.task_info:
-                writer.writerows(self.task_info)
+            writer.writerows(self.task_info)
         print "Done saving task info."
         
 
