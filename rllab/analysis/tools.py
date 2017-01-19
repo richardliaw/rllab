@@ -211,3 +211,17 @@ def plot_timechart_file(pth, idx):
 
     plot_timechart(times_w1, idx)
 
+### TASKS.CSV
+
+def show_rate(path):
+    dfs = tools.get_dataframes(path, fname="tasks.csv")
+
+    for df in dfs.values():
+        df['ip'] = df['worker_id'].apply(lambda s: s.split("_")[1])
+        df['timing'] = df['end'] - df['start']
+
+        obj = df[['ip', 'trajlen', 'timing']].groupby(['ip']).agg(['mean', 'count'])
+        obj['rate'] = obj['trajlen']['mean'] / obj['timing']['mean']
+        print obj.sort(['rate'])
+    
+
