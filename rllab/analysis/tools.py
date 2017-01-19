@@ -214,7 +214,7 @@ def plot_timechart_file(pth, idx):
 ### TASKS.CSV
 
 def show_rate(path):
-    dfs = tools.get_dataframes(path, fname="tasks.csv")
+    dfs = get_dataframes(path, fname="tasks.csv")
 
     for df in dfs.values():
         df['ip'] = df['worker_id'].apply(lambda s: s.split("_")[1])
