@@ -12,12 +12,12 @@ import pandas as pd
 
 
 
-def get_csvs(directory):
-    return [os.path.join(x[0], "progress.csv") for x in os.walk(directory) if "progress.csv" in x[2]]
+def get_csvs(directory, fname="progress.csv"):
+    return [os.path.join(x[0], fname) for x in os.walk(directory) if fname in x[2]]
 
-def get_dataframes(path, filtered=False):
+def get_dataframes(path, filtered=False, **kwargs):
     dfs = {}
-    for i, csv in enumerate(get_csvs(path)):
+    for i, csv in enumerate(get_csvs(path, **kwargs)):
         print csv
         df_csv = pd.read_csv(csv)
         if filtered:
