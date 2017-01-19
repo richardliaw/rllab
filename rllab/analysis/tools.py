@@ -2,8 +2,11 @@ import json
 from datetime import datetime
 
 import matplotlib
-matplotlib.use("MacOSX")
-import matplotlib.pyplot as plt
+try:
+    matplotlib.use("MacOSX")
+    import matplotlib.pyplot as plt
+except Exception:
+    pass
 import numpy as np
 import os
 import os.path as osp
