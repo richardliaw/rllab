@@ -17,7 +17,7 @@ import ray
 
 ray_setting.WORKERS = 1
 
-ray.init(start_ray_local=True, num_workers=ray_setting.WORKERS)
+ray.init(num_workers=ray_setting.WORKERS)
 
 def env_init():
     return normalize(GymEnv("ppaquette/DoomBasic-v0", record_video=False))
@@ -26,24 +26,24 @@ def env_init():
 def env_reinit(env):
     return env
 
-ray.reusables.env = ray.Reusable(env_init, env_reinit)
+ray.env.env = ray.EnvironmentVariable(env_init, env_reinit)
 
 def policy_init():
-    env = ray.reusables.env
+    env = ray.env.env
     return CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=(64,64))
 
 def policy_reinit(policy):
     # policy.reset()
     return policy
 
-ray.reusables.policy = ray.Reusable(policy_init, policy_reinit)
+ray.env.policy = ray.EnvironmentVariable(policy_init, policy_reinit)
 
-env = ray.reusables.env
+env = ray.env.env
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 
 algo = TRPO(
-    env=ray.reusables.env,
-    policy=ray.reusables.policy,
+    env=ray.env.env,
+    policy=ray.env.policy,
     baseline=baseline,
     batch_size=4000,
     max_path_length=env.horizon,

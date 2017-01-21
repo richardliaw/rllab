@@ -12,6 +12,8 @@ from rllab.envs.base import Env, Step
 from rllab.core.serializable import Serializable
 from rllab.spaces.box import Box
 from rllab.spaces.discrete import Discrete
+from rllab.spaces.product import Product
+from rllab.spaces.ranged_discrete import RangedDiscrete
 from rllab.misc import logger
 import logging
 
@@ -21,6 +23,10 @@ def convert_gym_space(space):
         return Box(low=space.low, high=space.high)
     elif isinstance(space, gym.spaces.Discrete):
         return Discrete(n=space.n)
+    elif isinstance(space, gym.spaces.MultiDiscrete):
+        return Product([RangedDiscrete(space.low[i], space.high[i]) 
+                            if space.low[i] else Discrete(space.high[i])
+                            for i in range(space.shape)]) 
     else:
         raise NotImplementedError
 
@@ -69,7 +75,6 @@ class GymEnv(Env, Serializable):
                     video_schedule = CappedCubicVideoSchedule()
             self.env.monitor.start(log_dir, video_schedule)
             self.monitoring = True
-        import ipdb; ipdb.set_trace()
         self._observation_space = convert_gym_space(env.observation_space)
         self._action_space = convert_gym_space(env.action_space)
         self._horizon = env.spec.timestep_limit
