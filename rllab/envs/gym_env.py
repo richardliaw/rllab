@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import gym
+import ppaquette_gym_doom
 import gym.envs
 import gym.spaces
 from gym.monitoring import monitor
@@ -68,7 +69,7 @@ class GymEnv(Env, Serializable):
                     video_schedule = CappedCubicVideoSchedule()
             self.env.monitor.start(log_dir, video_schedule)
             self.monitoring = True
-
+        import ipdb; ipdb.set_trace()
         self._observation_space = convert_gym_space(env.observation_space)
         self._action_space = convert_gym_space(env.action_space)
         self._horizon = env.spec.timestep_limit
